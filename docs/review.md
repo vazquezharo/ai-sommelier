@@ -25,3 +25,19 @@ Code trace:
 - Host code and session cookie protect paid routes; long-lived key is server-only. Basic limits are per instance.
 - The user reported real voice disclosures; no live-model reproduction is claimed without authorized credentials in this review.
 Baseline score pending reproduced checks. Do not assign a passing score from mocked speech.
+
+### Reproduced baseline (before fixes)
+Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36919807861 baseline job 110562738335 passed the existing 13 core tests, production build, and 20 browser tests. These tests did not catch the answer-key boundary or streamed-audio problem. Live HTTP evidence is in the baseline-evidence artifact and the baseline job log. Scores are assigned against the fixed checks, not the old test count.
+
+Live HTTP check reproduced an unrevealed answer disclosure: GET /source.json returned 200 and the first answer-key entry (St. Francis / Pinot Noir) while /api/host returned unlocked:false. / and /api/host also returned 200. No paid API request was made. Recorded at 2026-10-01T20:12:39Z in baseline log.
+
+### Baseline score: 56/100; acceptance FAIL
+| Category | Earned | Evidence/deductions |
+|---|---:|---|
+| Secrecy | 11/40 | S1 8: anonymous live context/request. S2 0: public key and browser bundle. S3 0: local reveal and unguarded overview state. S4 0: raw streamed audio. S5 3: epochs/mode resets simulated, live unverified. |
+| Guidance | 16/20 | 6/8 sensory coverage: identical generic hint; 6/6 reviewed unknown facts; 4/6 tone/general education: overbroad grape refusal, live behavior unverified. |
+| Voice | 12/15 | 5/5 mic controls; 4/5 cancellation mocked; 3/5 errors simulated, provider/iOS output unverified. |
+| Recovery | 7/10 | 4/5 browser persistence, 3/5 reconnect simulated; no authoritative private reveal recovery. |
+| Mobile | 7/10 | 4/4 emulated touch targets; 3/4 keyboard/status checks incomplete; 0/2 physical Safari/Bluetooth unverified. |
+| Maintainability | 3/5 | 2/3 source separation/privacy docs inaccurate; 1/2 old tests pass while missing key/audio gates. |
+API-key exposure: no actual key found in repository/browser source inspected; actual Vercel env inaccessible. Live disclosure report from user remains additional evidence, not a newly reproduced paid-model result.

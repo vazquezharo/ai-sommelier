@@ -1,108 +1,71 @@
-export type VoiceState="off"|"connecting"|"ready"|"listening"|"speaking"|"error";
+import {answers,AnswerId} from "./guidance";
+export type VoiceState="off"|"connecting"|"ready"|"listening"|"processing"|"speaking"|"error";
 type Callbacks={state:(s:VoiceState)=>void;message:(s:string)=>void;transcript:(role:string,text:string)=>void;audioBlocked:()=>void};
-export class Voice {
- private pc:RTCPeerConnection|null=null;
- private dc:RTCDataChannel|null=null;
- private stream:MediaStream|null=null;
- private abort:AbortController|null=null;
- private epoch=0;
- private pressTime=0;
- private listening=false;
- private responseActive=false;
- private partialTranscript="";
- private questionTimer:ReturnType<typeof setTimeout>|null=null;
- private sessionTimer:ReturnType<typeof setTimeout>|null=null;
- private disconnectTimer:ReturnType<typeof setTimeout>|null=null;
- private audio:HTMLAudioElement;
- constructor(audio:HTMLAudioElement,private cb:Callbacks){this.audio=audio;}
- private emit(s:VoiceState){this.cb.state(s);}
- private send(event:Record<string,unknown>){if(this.dc?.readyState==="open")this.dc.send(JSON.stringify(event));}
+export class Voice{
+ private stream:MediaStream|null=null;private recorder:MediaRecorder|null=null;private abort:AbortController|null=null;
+ private epoch=0;private chunks:Blob[]=[];private listening=false;private responseActive=false;private pressTime=0;
+ private questionTimer:ReturnType<typeof setTimeout>|null=null;private sessionTimer:ReturnType<typeof setTimeout>|null=null;
+ private url:string|null=null;private state:VoiceState="off";
+ constructor(private audio:HTMLAudioElement,private cb:Callbacks){}
+ private emit(s:VoiceState){this.state=s;this.cb.state(s);}
  close(){
-  ++this.epoch;this.abort?.abort();
-  if(this.partialTranscript){this.cb.transcript("Sommelier (interrupted)",this.partialTranscript);this.partialTranscript="";}this.abort=null;
-  if(this.questionTimer)clearTimeout(this.questionTimer);
-  if(this.sessionTimer)clearTimeout(this.sessionTimer);
-  if(this.disconnectTimer)clearTimeout(this.disconnectTimer);
-  this.stream?.getTracks().forEach(t=>{t.enabled=false;t.stop();});this.stream=null;
-  if(this.pc){this.pc.ontrack=null;this.pc.onconnectionstatechange=null;}
-  if(this.dc){this.dc.onmessage=null;this.dc.onclose=null;this.dc.close();}
-  this.pc?.close();this.pc=null;this.dc=null;this.listening=false;this.responseActive=false;
-  this.audio.pause();this.audio.srcObject=null;this.emit("off");
+  ++this.epoch;this.abort?.abort();this.abort=null;if(this.questionTimer)clearTimeout(this.questionTimer);if(this.sessionTimer)clearTimeout(this.sessionTimer);
+  if(this.recorder){this.recorder.ondataavailable=null;this.recorder.onstop=null;this.recorder.onerror=null;if(this.recorder.state!=="inactive")try{this.recorder.stop();}catch{}}
+  this.recorder=null;this.stream?.getTracks().forEach(t=>{t.enabled=false;t.stop();});this.stream=null;this.chunks=[];this.listening=false;this.responseActive=false;
+  this.audio.onended=null;this.audio.onerror=null;this.audio.pause();this.audio.removeAttribute("src");this.audio.load();if(this.url)URL.revokeObjectURL(this.url);this.url=null;this.emit("off");
  }
+ stop(){this.close();}
  async connect(){
   this.close();const epoch=this.epoch;this.emit("connecting");
-  this.abort=new AbortController();const signal=this.abort.signal;
-  let connectionTimeout:ReturnType<typeof setTimeout>|undefined;
   try{
-   if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)throw Error("Microphone needs Safari over HTTPS. Written notes are still available.");
-   // Acquire permission directly from the host gesture; disable all tracks before connecting.
+   if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw Error("Recording needs a supported browser over HTTPS. You can type a question.");
    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-   stream.getTracks().forEach(t=>t.enabled=false);
-   if(epoch!==this.epoch){stream.getTracks().forEach(t=>t.stop());return;}
-   this.stream=stream;
-   const r=await fetch("/api/voice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"blind"}),signal});
-   const token=await r.json();if(!r.ok)throw Error(token.error || "Voice is unavailable.");
-   if(epoch!==this.epoch)return;
-   const pc=new RTCPeerConnection();this.pc=pc;
-   stream.getAudioTracks().forEach(t=>pc.addTrack(t,stream));
-   const dc=pc.createDataChannel("oai-events");this.dc=dc;
-   pc.ontrack=e=>{if(epoch!==this.epoch)return;this.audio.srcObject=e.streams[0];this.audio.play().catch(()=>this.cb.audioBlocked());};
-   const ready=new Promise<void>((resolve,reject)=>{
-    connectionTimeout=setTimeout(()=>reject(Error("Voice connection timed out. Try connecting again.")),20000);
-    dc.onmessage=e=>{
-     if(epoch!==this.epoch)return;
-     let event;try{event=JSON.parse(e.data);}catch{return;}
-     if(event.type==="session.created"){resolve();this.emit("ready");}
-     if(event.type==="response.created"){this.responseActive=true;this.emit("speaking");}
-     if(event.type==="output_audio_buffer.started"){this.emit("speaking");}
-     if(event.type==="output_audio_buffer.stopped"){this.responseActive=false;this.emit("ready");}
-     if(event.type==="response.done" && event.response?.status!=="completed"){this.responseActive=false;this.emit("ready");}
-     if(event.type==="response.output_audio_transcript.delta" && event.delta)this.partialTranscript+=event.delta;
-     if(event.type==="response.output_audio_transcript.done" && event.transcript){this.cb.transcript("Sommelier",event.transcript);this.partialTranscript="";}
-     if(event.type==="conversation.item.input_audio_transcription.completed" && event.transcript)this.cb.transcript("Guest",event.transcript);
-     if(event.type==="error"){
-      const detail=event.error?.message || "Voice service error.";
-      reject(Error(detail));this.close();this.emit("error");this.cb.message(detail);
-     }
-    };
-    dc.onclose=()=>{if(epoch===this.epoch){reject(Error("Voice disconnected."));this.close();this.emit("error");this.cb.message("Voice disconnected. Ask sommelier to reconnect.");}};
-   });
-   void ready.catch(()=>{});
-   pc.onconnectionstatechange=()=>{
-    if(epoch!==this.epoch)return;
-    if(pc.connectionState==="connected" && this.disconnectTimer){clearTimeout(this.disconnectTimer);this.disconnectTimer=null;}
-    if(pc.connectionState==="disconnected")this.disconnectTimer=setTimeout(()=>{if(epoch===this.epoch){this.close();this.emit("error");this.cb.message("Voice disconnected. Reconnect when ready.");}},5000);
-    if(pc.connectionState==="failed"){this.close();this.emit("error");this.cb.message("Voice connection failed. Try again.");}
-   };
-   const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-   const answer=await fetch("https://api.openai.com/v1/realtime/calls",{method:"POST",headers:{Authorization:"Bearer "+token.value,"Content-Type":"application/sdp"},body:offer.sdp,signal});
-   if(!answer.ok)throw Error("Voice handshake failed ("+answer.status+"). Try again.");
-   const sdp=await answer.text();if(epoch!==this.epoch)return;
-   await pc.setRemoteDescription({type:"answer",sdp});await ready;
-   if(connectionTimeout)clearTimeout(connectionTimeout);
-   if(epoch!==this.epoch)return;
-   this.sessionTimer=setTimeout(()=>{this.close();this.cb.message("Ten-minute voice session ended. Reconnect to ask more.");},10*60*1000);
-  }catch(e){
-   if(connectionTimeout)clearTimeout(connectionTimeout);
-   if(epoch!==this.epoch)return;
-   this.close();this.emit("error");
-   this.cb.message(e instanceof DOMException && e.name==="NotAllowedError"?"Microphone access was denied. Allow it in Safari’s website settings, then reconnect. You can still use every written script.":e instanceof Error?e.message:"Voice unavailable.");
-  }
+   stream.getTracks().forEach(t=>t.enabled=false);if(epoch!==this.epoch){stream.getTracks().forEach(t=>t.stop());return;}
+   this.stream=stream;stream.getTracks().forEach(t=>t.addEventListener?.("ended",()=>{if(epoch===this.epoch){this.close();this.emit("error");this.cb.message("Microphone disconnected. Reconnect or type a question.");}}));
+   this.emit("ready");this.sessionTimer=setTimeout(()=>{this.close();this.cb.message("Voice session ended. Reconnect when ready.");},10*60*1000);
+  }catch(e){if(epoch!==this.epoch)return;this.close();this.emit("error");this.cb.message(e instanceof DOMException&&e.name==="NotAllowedError"?"Microphone access was denied. Allow it in Safari’s website settings, or type a question.":e instanceof Error?e.message:"Recording unavailable. Type a question.");}
  }
  begin(){
-  if(!this.stream||this.dc?.readyState!=="open"||this.listening||this.responseActive)return;
-  this.send({type:"input_audio_buffer.clear"});this.pressTime=Date.now();this.listening=true;
-  this.stream.getAudioTracks().forEach(t=>t.enabled=true);this.emit("listening");
-  this.questionTimer=setTimeout(()=>this.finish(),30000);
+  if(!this.stream||this.listening||this.responseActive||this.state!=="ready")return;
+  const epoch=this.epoch;this.chunks=[];
+  try{
+   const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm"].find(m=>MediaRecorder.isTypeSupported(m));
+   const recorder=new MediaRecorder(this.stream,mime?{mimeType:mime}:undefined);this.recorder=recorder;
+   recorder.ondataavailable=e=>{if(epoch===this.epoch&&e.data.size)this.chunks.push(e.data);};
+   recorder.onerror=()=>{if(epoch===this.epoch){this.close();this.emit("error");this.cb.message("Recording failed. Reconnect or type a question.");}};
+   this.stream.getTracks().forEach(t=>t.enabled=true);this.listening=true;this.pressTime=Date.now();recorder.start();this.emit("listening");
+   this.questionTimer=setTimeout(()=>this.finish(),30000);
+  }catch{this.close();this.emit("error");this.cb.message("Recording failed. You can type a question.");}
  }
  finish(cancel=false){
-  if(!this.listening)return;
-  this.listening=false;this.stream?.getTracks().forEach(t=>t.enabled=false);
-  if(this.questionTimer)clearTimeout(this.questionTimer);
-  if(cancel || Date.now()-this.pressTime<250){this.send({type:"input_audio_buffer.clear"});this.emit("ready");return;}
-  // Commit a single explicit PTT turn; VAD and automatic response creation are disabled.
-  this.responseActive=true;this.send({type:"input_audio_buffer.commit"});this.send({type:"response.create"});this.emit("speaking");
+  if(!this.listening||!this.recorder)return;this.listening=false;this.stream?.getTracks().forEach(t=>t.enabled=false);if(this.questionTimer)clearTimeout(this.questionTimer);
+  const epoch=this.epoch,recorder=this.recorder,discard=cancel||Date.now()-this.pressTime<250;
+  if(discard){recorder.ondataavailable=null;recorder.onstop=null;try{recorder.stop();}catch{}this.chunks=[];this.emit("ready");return;}
+  this.responseActive=true;this.emit("processing");
+  recorder.onstop=()=>{if(epoch!==this.epoch)return;const blob=new Blob(this.chunks,{type:recorder.mimeType||"audio/webm"});this.chunks=[];const data=new FormData();data.append("audio",blob,blob.type.startsWith("audio/mp4")?"question.mp4":"question.webm");void this.ask(data,epoch);};
+  try{recorder.stop();}catch{this.close();this.emit("error");this.cb.message("Recording failed. Type a question.");}
  }
- // Stop closes the entire connection so late packets cannot restart playback or spoil another round.
- stop(){this.send({type:"response.cancel"});this.send({type:"output_audio_buffer.clear"});this.close();}
+ async askText(question:string){
+  if(this.listening||this.responseActive)return;const epoch=this.epoch;this.responseActive=true;this.emit("processing");await this.ask(JSON.stringify({question}),epoch);
+ }
+ private async ask(body:FormData|string,epoch:number){
+  this.abort=new AbortController();const signal=this.abort.signal;
+  try{
+   const r=await fetch("/api/question",{method:"POST",headers:typeof body==="string"?{"Content-Type":"application/json"}:undefined,body,signal});
+   const result=await r.json();if(epoch!==this.epoch)return;if(!r.ok)throw Error(result.error||"Question unavailable.");
+   // Exact catalog membership is a second boundary. No model prose is allowed through.
+   const id=result.answerId as AnswerId;if(!Object.hasOwn(answers,id)||result.text!==answers[id])throw Error("Unapproved answer blocked. Try a general tasting question.");
+   this.cb.transcript("Guest",result.question);this.cb.transcript("Sommelier",result.text);
+   if(result.notice)this.cb.message(result.notice);
+   if(!result.audioAvailable){this.responseActive=false;this.emit(this.stream?"ready":"off");return;}
+   const speech=await fetch("/api/audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"answer",answerId:id}),signal});
+   if(epoch!==this.epoch)return;
+   if(!speech.ok){const error=await speech.json();throw Error(error.error||"Audio unavailable. The reviewed answer is in the transcript.");}
+   const blob=await speech.blob();if(epoch!==this.epoch)return;
+   if(this.url)URL.revokeObjectURL(this.url);this.url=URL.createObjectURL(blob);this.audio.src=this.url;
+   this.audio.onended=()=>{if(epoch===this.epoch){this.responseActive=false;this.emit(this.stream?"ready":"off");}};
+   this.audio.onerror=()=>{if(epoch===this.epoch){this.responseActive=false;this.emit("error");this.cb.message("Audio playback failed. The reviewed answer is in the transcript.");}};
+   this.emit("speaking");try{await this.audio.play();}catch{if(epoch===this.epoch){this.cb.audioBlocked();this.cb.message("Tap Enable speaker. The reviewed answer is in the transcript.");}}
+  }catch(e){if(epoch!==this.epoch)return;this.responseActive=false;this.emit("error");this.cb.message(e instanceof Error?e.message:"Question unavailable. Written guidance remains available.");}
+ }
 }

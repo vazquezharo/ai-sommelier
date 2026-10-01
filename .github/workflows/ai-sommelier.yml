@@ -7,6 +7,7 @@ permissions:
   contents: read
 jobs:
   baseline:
+    if: github.event.pull_request.head.sha == 'ded916071960aee57fcad814ba83ce4f676fe7d1'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
