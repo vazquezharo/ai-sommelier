@@ -6,6 +6,31 @@ on:
 permissions:
   contents: read
 jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 95e78ebda1d55c583aa816341f922bece540f443
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:browser
+      - uses: actions/checkout@v4
+        with:
+          path: review-source
+      - run: node review-source/scripts/review-baseline.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baseline-evidence
+          path: |
+            review-evidence
+            playwright-report
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -17,11 +42,11 @@ jobs:
       - run: npm install
       - run: npm test
       - run: npm run build
-      - run: google-chrome --version
-        timeout-minutes: 1
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: sommelier-browser-report
-          path: playwright-report
+          name: review-evidence
+          path: |
+            playwright-report
+            review-evidence
