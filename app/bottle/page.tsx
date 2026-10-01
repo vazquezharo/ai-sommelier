@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import type {BottleLabel,BottleState} from "@/lib/bottle-types";
 import {bottleImage} from "@/lib/bottle-image";
 import {Voice,VoiceState} from "@/lib/voice";
-type Entry={role:string;text:string};
+type Entry={role:string;text:string;sources?:string[]};
 const empty:BottleLabel={producer:null,name:null,grape:null,region:null,vintage:null};
 const fields={producer:"Producer",name:"Wine name",grape:"Grape",region:"Region",vintage:"Vintage"} as const;
 export default function BottlePage(){
@@ -57,7 +57,7 @@ export default function BottlePage(){
  }
  function newVoice(){
   const id=current.current?.id;if(!id)return null;
-  const v=new Voice(voiceAudio.current!,{state:setVoiceState,message:setMessage,transcript:(role,text)=>{if(current.current?.id===id)setTranscript(t=>[...t,{role,text}].slice(-80));},audioBlocked:()=>setBlocked(true),authRequired:expired},id);voice.current=v;return v;
+  const v=new Voice(voiceAudio.current!,{state:setVoiceState,message:setMessage,transcript:(role,text,sources)=>{if(current.current?.id===id)setTranscript(t=>[...t,{role,text,sources}].slice(-80));},audioBlocked:()=>setBlocked(true),authRequired:expired},id);voice.current=v;return v;
  }
  async function connect(){stop();setMessage("");prime(voiceAudio.current);await newVoice()?.connect();}
  async function ask(e:React.FormEvent){e.preventDefault();if(!question.trim()||!bottle?.revealed)return;if(speaking)stop();const q=question;setQuestion("");prime(voiceAudio.current);await (voice.current||newVoice())?.askText(q);}
@@ -89,14 +89,14 @@ export default function BottlePage(){
     <div className="controls"><button className="secondary" disabled={busy} onClick={play}>▷ Play overview</button><button className="primary" disabled={busy||voiceState==="connecting"} onClick={connect}>{voiceState==="error"?"Reconnect sommelier":"Ask about this bottle"}</button><button className="stop span-two" onClick={()=>{stop();setMessage("Speaking stopped.");}}>■ Stop speaking</button></div>
     {blocked&&<button className="primary full" onClick={()=>{const el=speaking?audio.current:voiceAudio.current;void el?.play().then(()=>setBlocked(false)).catch(()=>setMessage("Playback is blocked. Check Safari audio permissions."));}}>Enable speaker</button>}
     <div className="voice-box">
-     <p role="status">{voiceState==="off"?"Microphone off":voiceState==="ready"?"Ready · microphone off":voiceState==="listening"?"Listening to your question":voiceState==="processing"?"Preparing bottle answer · microphone off":voiceState==="speaking"?"Sommelier speaking · microphone off":voiceState==="connecting"?"Connecting…":"Voice unavailable"}</p>
+     <p role="status">{voiceState==="off"?"Microphone off":voiceState==="ready"?"Ready · microphone off":voiceState==="listening"?"Listening to your question":voiceState==="processing"?"Looking up your bottle · microphone off":voiceState==="speaking"?"Sommelier speaking · microphone off":voiceState==="connecting"?"Connecting…":"Voice unavailable"}</p>
      {["ready","listening","processing","speaking"].includes(voiceState)&&<><button className="ptt full" disabled={voiceState==="processing"||voiceState==="speaking"} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);voice.current?.begin();}} onPointerUp={e=>{e.preventDefault();voice.current?.finish();}} onPointerCancel={()=>voice.current?.finish(true)} onLostPointerCapture={()=>voice.current?.finish(true)} onContextMenu={e=>e.preventDefault()} onKeyDown={e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat){e.preventDefault();voice.current?.begin();}}} onKeyUp={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();voice.current?.finish();}}}>{voiceState==="listening"?"Release to send":"Hold to ask · release to send"}</button><button className="text-button" onClick={stop}>End voice session</button></>}
      <form onSubmit={ask}><label htmlFor="bottle-question">Your bottle question</label><input id="bottle-question" value={question} maxLength={1200} placeholder="What food would pair well?" onChange={e=>setQuestion(e.target.value)}/><button className="secondary full" disabled={active||busy}>Send question</button></form>
     </div>
     <details className="details" open><summary>Sommelier overview</summary><p>{bottle.overview}</p></details>
     <details className="details"><summary>Label, research & sources</summary><p>{bottle.researchNote}</p>{bottle.facts.map((fact,i)=><p key={i}>{fact.claim} <a href={fact.url} target="_blank" rel="noreferrer">Source</a></p>)}{bottle.sources.map(url=><p key={url}><a href={url} target="_blank" rel="noreferrer">{new URL(url).hostname}</a></p>)}</details>
     <details className="details"><summary>Tasting notes</summary><label htmlFor="bottle-notes">What do you notice?</label><textarea id="bottle-notes" rows={3} value={notes} onChange={e=>setNotes(e.target.value)}/></details>
-    <details className="details"><summary>Bottle transcript ({transcript.length})</summary>{transcript.map((t,i)=><p key={i}><strong>{t.role}</strong><br/>{t.text}</p>)}</details>
+    <details className="details"><summary>Bottle transcript ({transcript.length})</summary>{transcript.map((t,i)=><p key={i}><strong>{t.role}</strong><br/>{t.text}{t.sources?.map(url=><span key={url}><br/><a href={url} target="_blank" rel="noreferrer">Source · {new URL(url).hostname}</a></span>)}</p>)}</details>
    </>}
    {unlocked&&bottle&&<button className="text-button" onClick={clear}>Scan another bottle</button>}
   </section>

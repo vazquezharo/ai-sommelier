@@ -1,6 +1,6 @@
 import {answers,AnswerId} from "./guidance";
 export type VoiceState="off"|"connecting"|"ready"|"listening"|"processing"|"speaking"|"error";
-type Callbacks={state:(s:VoiceState)=>void;message:(s:string)=>void;transcript:(role:string,text:string)=>void;audioBlocked:()=>void;authRequired?:()=>void};
+type Callbacks={state:(s:VoiceState)=>void;message:(s:string)=>void;transcript:(role:string,text:string,sources?:string[])=>void;audioBlocked:()=>void;authRequired?:()=>void};
 export class Voice{
  private stream:MediaStream|null=null;private recorder:MediaRecorder|null=null;private abort:AbortController|null=null;
  private epoch=0;private chunks:Blob[]=[];private listening=false;private responseActive=false;private pressTime=0;
@@ -61,7 +61,7 @@ export class Voice{
     if(result.id!==this.bottleId||typeof result.ticket!=="string"||result.ticket.length>3000||typeof result.text!=="string"||!result.text||result.text.length>1000||signedText!==result.text)throw Error("Unapproved bottle answer blocked. Reconnect and try again.");
     this.lastTicket=result.ticket;
    }else if(!Object.hasOwn(answers,id)||result.text!==answers[id])throw Error("Unapproved answer blocked. Try a general tasting question.");
-   this.cb.transcript("Guest",result.question);this.cb.transcript("Sommelier",result.text);
+   this.cb.transcript("Guest",result.question);this.cb.transcript("Sommelier",result.text,this.bottleId&&Array.isArray(result.sources)?result.sources.filter((u:unknown)=>typeof u==="string"&&u.startsWith("https://")).slice(0,4):undefined);
    if(result.notice)this.cb.message(result.notice);
    if(!result.audioAvailable){this.responseActive=false;this.emit(this.stream?"ready":"off");return;}
    const speech=this.bottleId?await fetch("/api/bottle/audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"answer",id:this.bottleId,ticket:result.ticket}),signal}):await fetch("/api/audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"answer",answerId:id}),signal});

@@ -54,7 +54,7 @@ test("mobile photo upload, host confirmation, typed answer, playback, Stop, and 
  await page.getByRole("button",{name:"Reveal & prepare overview"}).click();await expect(page.getByRole("heading",{name:"Label Reserve",exact:true})).toBeVisible();
  await page.getByRole("button",{name:"Play overview"}).click();await page.waitForFunction(()=>[...document.querySelectorAll("audio")].some(a=>!a.paused));await page.getByRole("button",{name:"Stop speaking"}).click();
  await page.getByLabel("Your bottle question").fill("What food pairs?");await page.getByRole("button",{name:"Send question",exact:true}).click();await expect(page.getByText("Sommelier speaking · microphone off",{exact:true})).toBeVisible();
- await page.getByRole("button",{name:"Stop speaking"}).click();await expect(page.getByText("Bottle transcript (2)",{exact:true})).toBeVisible();await page.reload();await expect(page.getByRole("heading",{name:"Label Reserve",exact:true})).toBeVisible();await expect(page.getByText("Bottle transcript (2)",{exact:true})).toBeVisible();
+ await page.getByRole("button",{name:"Stop speaking"}).click();await page.getByText("Bottle transcript (2)",{exact:true}).click();await expect(page.getByRole("link",{name:"Source · photo-estate.example",exact:true})).toBeVisible();await expect(page.getByText("Bottle transcript (2)",{exact:true})).toBeVisible();await page.reload();await expect(page.getByRole("heading",{name:"Label Reserve",exact:true})).toBeVisible();await expect(page.getByText("Bottle transcript (2)",{exact:true})).toBeVisible();
  await page.getByRole("link",{name:"Back to blind tasting"}).click();await expect(page.getByText("Host access unlocked.",{exact:true})).toHaveCount(1);await page.getByRole("button",{name:"Start tasting",exact:true}).click();await expect(page.getByRole("heading",{name:"Let the glass speak."})).toBeVisible();await expect(page.getByText("Photo Estate",{exact:true})).toHaveCount(0);
 });
 test("photo push-to-talk keeps mic off during output and Stop/new bottle abort stale speech",async({page})=>{
@@ -70,4 +70,31 @@ test("photo push-to-talk keeps mic off during output and Stop/new bottle abort s
 test("photo demo does not fabricate recognition",async({page})=>{
  await page.route("**/api/host",r=>r.fulfill({json:{demo:true,unlocked:false,hostConfigured:false,missing:["API key"]}}));await page.goto("/bottle");
  await expect(page.getByText(/No bottle is simulated/)).toBeVisible();await expect(page.getByLabel("Choose bottle photo")).toBeDisabled();
+});
+
+test("follow-up questions perform fresh bounded web research and cite only consulted sources",async({request})=>{
+ const b=await scan(request);await reveal(request,b);
+ await request.get("http://127.0.0.1:4001/clear");
+ const answer=await (await request.post("/api/bottle/question",{headers,data:{question:"Tell me about the producer and how this wine is made",id:b.id}})).json();
+ expect(answer.sources).toEqual(["https://photo-estate.example/wines/reserve"]);expect(answer.notice).toBeNull();
+ expect(answer.text).not.toMatch(/https:|Source:|host-confirmed|revealed bottle/);
+ const capture=await (await request.get("http://127.0.0.1:4001/capture")).json();
+ const research=capture.find((c:{body?:{text?:{format?:{name?:string}}}})=>c.body?.text?.format?.name==="bottle_research").body;
+ expect(research.tools).toEqual([{type:"web_search",search_context_size:"low"}]);expect(research.tool_choice).toEqual({type:"web_search"});
+ expect(research.max_tool_calls).toBe(2);expect(JSON.parse(research.input).question).toContain("producer");
+ const composed=capture.find((c:{body?:{text?:{format?:{name?:string}}}})=>c.body?.text?.format?.name==="bottle_answer").body;
+ expect(composed.instructions).toContain("sommelier joining a table");expect(composed.instructions).toContain("not a report or chatbot");
+ expect(JSON.parse(composed.input).sourceBackedNotes.some((f:{claim:string})=>f.claim.includes("Invented"))).toBe(false);
+ expect((await request.post("/api/bottle/audio",{headers,data:{kind:"answer",id:b.id,ticket:answer.ticket}})).status()).toBe(200);
+ const spoken=await (await request.get("http://127.0.0.1:4001/capture")).json();
+ expect(spoken.find((c:{path:string;body?:{input:string}})=>c.path==="/v1/audio/speech").body.input).toBe(answer.text);
+ expect(spoken.find((c:{verification?:boolean})=>c.verification).text).toBe(answer.text);
+});
+test("follow-up research outage remains useful and transparent without fabricated citations",async({request})=>{
+ const b=await scan(request);await reveal(request,b);
+ await request.post("http://127.0.0.1:4001/controls",{data:{failResearch:true}});
+ try{
+  const r=await request.post("/api/bottle/question",{headers,data:{question:"How long was this particular vintage aged?",id:b.id}});
+  expect(r.status()).toBe(200);const a=await r.json();expect(a.notice).toContain("Web lookup is unavailable");expect(a.text).toBeTruthy();expect(a.sources).not.toContain("https://invented.example/fake");
+ }finally{await request.post("http://127.0.0.1:4001/controls",{data:{}});}
 });
