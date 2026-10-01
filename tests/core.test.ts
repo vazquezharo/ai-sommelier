@@ -53,3 +53,17 @@ test("host correction from Syrah to Grenache preserves round order and progress"
  const old={...initialProgress(),order:initialProgress().order.map(id=>id==="grenache"?"syrah":id),revealed:["syrah"],notes:{syrah:"Red fruit"},transcripts:{syrah:[{role:"Guest",text:"Soft texture"}]}};
  const p=restoreProgress(JSON.stringify(old));assert.equal(p.order[1],"grenache");assert.deepEqual(p.revealed,["grenache"]);assert.equal(p.notes.grenache,"Red fruit");assert.equal(p.transcripts.grenache[0].text,"Soft texture");
 });
+
+test("end reveal mode hides legacy reveals until an explicit final reveal",()=>{
+ let p={...initialProgress(),started:true,revealed:["pinot"]};
+ assert.equal(identityVisible(p,"pinot"),false);
+ assert.equal(revealLineup(p).lineupRevealed,false);
+ p=revealLineup({...p,finished:true});assert.equal(p.lineupRevealed,true);
+ for(const id of p.order)assert.equal(identityVisible(p,id),true);
+ assert.equal(restoreProgress(JSON.stringify(p)).lineupRevealed,true);
+});
+test("scores and guesses survive reorder and resume; invalid scores are ignored",()=>{
+ let p=reorder(initialProgress(),0,7);p={...p,scores:{pinot:8,grenache:0,malbec:11,merlot:5.5},guesses:{pinot:"My guess",grenache:"Another guess"}};
+ const restored=restoreProgress(JSON.stringify(p));
+ assert.deepEqual(restored.scores,{pinot:8});assert.equal(restored.guesses.pinot,"My guess");assert.equal(restored.order[7],"pinot");
+});

@@ -1,7 +1,7 @@
 "use client";
 import {useCallback,useEffect,useRef,useState} from "react";
 import {wines,anonymousHint} from "@/lib/wines";
-import {initialProgress,restoreProgress,reveal,reorder,Progress} from "@/lib/progress";
+import {initialProgress,restoreProgress,reveal,reorder,identityVisible,revealLineup,Progress} from "@/lib/progress";
 import {Voice,VoiceState} from "@/lib/voice";
 const storageKey="ai-sommelier-v1";
 const silent="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
@@ -28,7 +28,7 @@ export default function Home(){
  const blobURL=useRef<string|null>(null);
  const progress=useRef(p);progress.current=p;
  const wine=wines.find(w=>w.id===p.order[p.index])!;
- const isRevealed=p.revealed.includes(wine.id);
+ const isRevealed=identityVisible(p,wine.id);
  const stop=useCallback(()=>{
   ++audioEpoch.current;fetchAbort.current?.abort();fetchAbort.current=null;
   player.current?.pause();if(player.current){player.current.removeAttribute("src");player.current.load();}
@@ -61,7 +61,7 @@ export default function Home(){
  }
  function log(role:string,text:string){
   const id=progress.current.order[progress.current.index];
-  setP(prev=>({...prev,transcripts:{...prev.transcripts,[id]:[...(prev.transcripts[id]||[]),{role,text}].slice(-100)}}));
+  setP(prev=>({...prev,transcripts:{...prev.transcripts,[id]:[...(prev.transcripts[id]||[]),{role,text,blind:!isRevealed}].slice(-100)}}));
  }
  async function play(kind:"hint"|"overview"){
   if(kind==="overview"&&!isRevealed)return;
@@ -109,7 +109,7 @@ export default function Home(){
  function changeRound(index:number){
   stop();setMessage("");setScript(null);setLineup(false);setP(prev=>({...prev,index,finished:false}));
  }
- function doReveal(){stop();setScript("overview");setMessage("Revealed. Tap Play overview when the group is ready.");setP(reveal);}
+ function doReveal(){if(p.revealMode!=="each")return;stop();setScript("overview");setMessage("Revealed. Tap Play overview when the group is ready.");setP(reveal);}
  function start(){stop();setSetup(false);setLineup(false);setP(prev=>({...prev,started:true,finished:false}));}
  function next(){
   if(p.index===7){stop();setP(prev=>({...prev,finished:true}));}
@@ -117,7 +117,8 @@ export default function Home(){
  }
  function reset(){if(window.confirm("Reset the tasting, round order, reveal states, notes, and transcripts on this device?")){stop();setP(initialProgress());setSetup(true);setScript(null);setMessage("");}}
  const note=typeof p.notes[wine.id]==="string"?p.notes[wine.id]:"";
- const transcripts=Array.isArray(p.transcripts[wine.id])?p.transcripts[wine.id]:[];
+ const allTranscripts=Array.isArray(p.transcripts[wine.id])?p.transcripts[wine.id]:[];
+ const transcripts=isRevealed?allTranscripts:allTranscripts.filter(t=>t.blind===true);
  if(!loaded)return <main className="shell"><h1>The AI Sommelier</h1><p>Opening your tasting…</p></main>;
  return <main className="shell">
   <header className="masthead"><a href="/" className="brand"><span className="brand-mark" aria-hidden="true">AS</span><span>The AI Sommelier<small>A private table. Eight wines.</small></span></a><span className="mode">{demo?"Demo mode":"AI enabled"}</span></header>
@@ -126,25 +127,27 @@ export default function Home(){
   {setup ? <section className="panel setup">
    <p className="eyebrow">HOST SETUP · 10–12 ADULTS</p><h1>Set the table.</h1>
    <p>Cover the labels. Number the bottles in the order below. Keep this screen with the host.</p>
-   <div className="setup-meta"><span>8 wines</span><span>7 main grapes</span><span>Host-led reveals</span></div>
+   <div className="setup-meta"><span>8 wines</span><span>7 main grapes</span><span>{p.revealMode==="end"?"Blind until the finale":"Reveal each round"}</span></div>
+   <label htmlFor="reveal-mode">When to reveal identities</label><select id="reveal-mode" value={p.revealMode} disabled={p.started} onChange={e=>setP(v=>({...v,revealMode:e.target.value==="each"?"each":"end"}))}><option value="end">Keep all rounds blind; reveal at the end</option><option value="each">Reveal each wine after tasting and scoring</option></select>
    <ol className="wine-list">{p.order.map((id,i)=>{const w=wines.find(x=>x.id===id)!;return <li key={id}><span className="number">{i+1}</span><div><strong>{w.producer}</strong><span>{w.name} · {w.grape}</span></div><div className="reorder"><button disabled={p.started||i===0} onClick={()=>setP(v=>reorder(v,i,i-1))} aria-label={"Move "+w.producer+" earlier"}>↑</button><button disabled={p.started||i===7} onClick={()=>setP(v=>reorder(v,i,i+1))} aria-label={"Move "+w.producer+" later"}>↓</button></div></li>;})}</ol>
    {p.started?<><button className="primary full" onClick={()=>{setSetup(false);setLineup(false);}}>Resume wine {p.index+1}</button><p className="muted">Order is locked after starting. Reset to change it.</p></>:<button className="primary full" onClick={start}>Start tasting</button>}
    <p className="muted">Vintage and exact blends: unknown. Spoken audio, when enabled, is AI-generated.</p>
   </section> : p.finished ? <section className="panel finale">
-   <p className="eyebrow">EIGHT WINES, MANY OPINIONS</p><h1>A toast to curiosity.</h1><p>The tasting is complete. Your notes and reveal states are saved on this device.</p>
+   <p className="eyebrow">EIGHT WINES, MANY OPINIONS</p><h1>A toast to curiosity.</h1><p>Your blind guesses, scores, and notes are saved on this device.</p><ol className="results">{p.order.map((id,i)=>{const w=wines.find(x=>x.id===id)!;return <li key={id}><strong>Wine {i+1}</strong>{identityVisible(p,id) && <p>{w.producer} — {w.name} · {w.grape}</p>}<p>Guess: {p.guesses[id]||"Not recorded"} · Score: {p.scores[id]!==undefined?p.scores[id]+"/10":"Not scored"}</p></li>;})}</ol>{p.revealMode==="end"&&!p.lineupRevealed && <button className="primary full" onClick={()=>{stop();setScript(null);setP(revealLineup);setMessage("Lineup revealed. Review a wine to hear its overview.");}}>Reveal the lineup</button>}
    <button className="primary full" onClick={()=>changeRound(7)}>Review the last wine</button><button className="secondary full" onClick={()=>{stop();setLineup(true);}}>Host-only lineup</button>
   </section> : <section className="panel round">
    <div className="round-top"><span className="eyebrow">WINE {p.index+1} OF 8</span><span className={"seal "+(isRevealed?"revealed":"")}>{isRevealed?"Revealed":"Blind tasting"}</span></div>
-   <div className="progress" aria-label={"Wine "+(p.index+1)+" of 8"}>{p.order.map((id,i)=><button key={id} className={(i===p.index?"current ":"")+(p.revealed.includes(id)?"done":"")} aria-label={"Go to wine "+(i+1)+(p.revealed.includes(id)?", already revealed":"")} onClick={()=>changeRound(i)}>{i+1}</button>)}</div>
+   <div className="progress" aria-label={"Wine "+(p.index+1)+" of 8"}>{p.order.map((id,i)=><button key={id} className={(i===p.index?"current ":"")+(identityVisible(p,id)?"done":"")} aria-label={"Go to wine "+(i+1)+(identityVisible(p,id)?", already revealed":"")} onClick={()=>changeRound(i)}>{i+1}</button>)}</div>
    <div className="wine-heading">{isRevealed?<><p className="eyebrow">{wine.producer}</p><h1>{wine.name}</h1><p className="grape">{wine.grape}</p><p className="muted">Region: {wine.region||"not yet verified"} · Vintage: unknown</p></>:<><span className="blind-number" aria-hidden="true">{String(p.index+1).padStart(2,"0")}</span><h1>Let the glass speak.</h1><p>Look. Smell. Sip. Share your guesses aloud.</p></>}</div>
    <div className="controls">
-    {!isRevealed?<><button className="secondary" disabled={busy} onClick={()=>play("hint")}>▷ Play hint</button><button className="primary" onClick={doReveal}>Reveal wine</button></>:<button className="primary span-two" disabled={busy} onClick={()=>play("overview")}>▷ Play overview</button>}
+    {!isRevealed?<><button className="secondary" disabled={busy} onClick={()=>play("hint")}>▷ Play hint</button>{p.revealMode==="each"?<button className="primary" onClick={doReveal}>Reveal wine</button>:<button className="secondary" onClick={()=>{stop();setScript("hint");}}>Read tasting guide</button>}</>:<button className="primary span-two" disabled={busy} onClick={()=>play("overview")}>▷ Play overview</button>}
     <button className="secondary" disabled={voiceState==="connecting"} onClick={connectVoice}>{voiceState==="error"?"Reconnect sommelier":"Ask sommelier"}</button>
     <button className="stop" onClick={()=>{stop();setMessage("Speaking stopped. Ask sommelier to start a fresh voice session.");}}>■ Stop speaking</button>
    </div>
    {busy && <p role="status" className="muted">Preparing reusable audio…</p>}
    {playing && <p role="status" className="muted">Playing {playing} · AI-generated voice</p>}
-   <div className="next-row"><button className="text-button" disabled={p.index===0} onClick={()=>changeRound(p.index-1)}>Previous</button><button className="primary" disabled={!isRevealed} onClick={next}>{p.index===7?"Finish tasting":"Next wine"}</button></div>
+   <div className="blind-score"><label htmlFor="guess">Your table’s grape guess</label><input id="guess" value={p.guesses[wine.id]||""} disabled={isRevealed} placeholder="Write your guess before the reveal…" onChange={e=>setP(v=>({...v,guesses:{...v.guesses,[wine.id]:e.target.value}}))}/><label htmlFor="score">Your table’s score · 1–10</label><select id="score" disabled={isRevealed} value={p.scores[wine.id]??""} onChange={e=>{const value=e.target.value;setP(v=>{const scores={...v.scores};if(value)scores[wine.id]=Number(value);else delete scores[wine.id];return {...v,scores};});}}><option value="">Not scored yet</option>{Array.from({length:10},(_,i)=><option key={i+1} value={i+1}>{i+1} / 10</option>)}</select><p className="muted">Judge what’s in the glass. Scores and guesses stay private on this device; they are not sent to the AI.</p></div>
+   <div className="next-row"><button className="text-button" disabled={p.index===0} onClick={()=>changeRound(p.index-1)}>Previous</button><button className="primary" disabled={p.revealMode==="each"&&!isRevealed} onClick={next}>{p.index===7?"Finish tasting":"Next wine"}</button></div>
    <div className="voice-box">
     <div className="voice-status"><span className={"status-dot "+voiceState}></span><strong>{voiceState==="off"?"Microphone off":voiceState==="connecting"?"Connecting…":voiceState==="ready"?"Ready · microphone off":voiceState==="listening"?"Listening to your question":voiceState==="speaking"?"Sommelier speaking · microphone off":"Voice unavailable"}</strong></div>
     {(voiceState==="ready"||voiceState==="listening"||voiceState==="speaking") && <><button className="ptt full" disabled={voiceState==="speaking"} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);voice.current?.begin();}} onPointerUp={e=>{e.preventDefault();voice.current?.finish();}} onPointerCancel={()=>voice.current?.finish(true)} onLostPointerCapture={()=>voice.current?.finish(true)} onContextMenu={e=>e.preventDefault()} onKeyDown={e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat){e.preventDefault();voice.current?.begin();}}} onKeyUp={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();voice.current?.finish();}}}>{voiceState==="listening"?"Release to send":"Hold to ask · release to send"}</button><button className="text-button" onClick={()=>{stop();setMessage("Voice session ended. Microphone released.");}}>End voice session</button></>}

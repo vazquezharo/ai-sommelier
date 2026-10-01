@@ -5,3 +5,5 @@
 .progress{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}.progress button{width:100%;min-height:44px;border-radius:8px}@media(max-width:400px){.progress{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}}
 
 .next-row{margin:16px 0}.voice-box{margin-top:16px}
+
+select{font:inherit;display:block;width:100%;min-height:48px;border:1px solid #bfae9e;border-radius:8px;padding:12px;background:white;color:var(--ink);margin:8px 0}select:focus{outline:2px solid var(--wine)}.blind-score{margin:20px 0;padding-top:16px;border-top:1px solid var(--line)}.blind-score label,.setup>label{display:block;font-weight:600;margin-top:12px}.results{list-style:none;padding:0;text-align:left}.results li{padding:14px 0;border-bottom:1px solid var(--line)}

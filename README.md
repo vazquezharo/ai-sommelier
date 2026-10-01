@@ -1,6 +1,10 @@
 # The AI Sommelier
 
-A mobile-first, single-host tasting app: eight rounds, local progress, host-controlled reveals, deterministic written scripts, reusable OpenAI speech audio, and browser WebRTC push-to-talk Q&A.
+A mobile-first, single-host tasting app: eight rounds blind until the final reveal by default, saved grape guesses and 1–10 table scores, local progress, host-controlled reveals, deterministic written scripts, reusable OpenAI speech audio, and browser WebRTC push-to-talk Q&A.
+
+## Blind tasting and scoring
+Setup offers two reveal modes. The default keeps all eight rounds anonymous until the host explicitly reveals the lineup at the end. Names, grapes, regions, bottle-specific notes, overviews, and previously revealed transcripts stay hidden in those rounds. Generic hints and general live education remain available. The optional per-round reveal mode retains the original flow.
+Each wine has one table grape guess and one optional 1–10 score, saved locally with notes. They stay editable while blind and become read-only once the identity is revealed. They are never sent to the AI. The finale shows numbered guesses and scores before revealing identities. This is a single-host table score, not individual participant voting.
 
 ## Current verification status
 - Scripts reviewed for 120–140 words; seven distinct main grapes. Halos de Jupiter is Grenache following the host’s correction; the original Syrah entry is migrated on resume.
@@ -64,7 +68,7 @@ The available connector cannot edit DNS records or attach custom domains. Those 
 
 ## Privacy and blind isolation
 The app is for the host’s device. Host setup and explicitly opened host lineup show identities; keep that screen away from guests. There are no participant accounts.
-The browser contains the seed lineup so the host can set up and reorder. The blind AI receives only the identical anonymous sensory hint and general wine education. It receives no ID, wine, producer, grape, region, lineup, position, or mapping. The server rejects additional fields in a blind-session request. No UI action is controlled by speech.
+The browser contains the seed lineup so the host can set up and reorder. The blind AI receives only the identical anonymous sensory hint and general wine education, including throughout all rounds in end-reveal mode. It receives no ID, wine, producer, grape, region, lineup, position, or mapping. The server rejects additional fields in a blind-session request. No UI action is controlled by speech.
 Every round/mode switch and Stop closes WebRTC, stops owned microphone tracks, aborts pending audio fetches, and invalidates late packets with an epoch. Connections are recreated rather than carrying previous revealed history into a blind round.
 Microphone tracks are disabled before connection and between PTT questions. Hold to ask, release to commit. Pointer cancellation, page hiding, and lost focus cancel listening. Stop closes the voice session to guarantee silence; Ask sommelier reconnects.
 Notes, transcripts, reveal state, order, and progress persist in localStorage on the current device/browser. They do not sync. Live audio goes to OpenAI; clear local data with Reset tasting. Scripted audio cache is separate. Hosting on a subdomain creates a separate local storage origin.
@@ -72,8 +76,9 @@ Notes, transcripts, reveal state, order, and progress persist in localStorage on
 ## Rehearsal checklist
 - Connect the iPhone to your Bluetooth speaker before opening Safari. Start at a moderate volume.
 - Cover labels and reorder BEFORE starting; number bottles to match. Check 8 wines / 7 grapes.
+- In default end-reveal mode, record a grape guess and a 1–10 table score for each numbered wine. Advance without revealing identities; reveal the lineup only at the finale.
 - Start, play a hint, and ask “What does tannin feel like?” Ask a grape guess and confirm the AI refuses to identify it.
-- Reveal, tap Play overview, ask a follow-up, then Stop mid-answer. Confirm the speaker goes silent.
+- At the final lineup reveal, review a wine, tap Play overview, ask a follow-up, then Stop mid-answer. Confirm the speaker goes silent.
 - Change rounds while audio is loading/playing. Confirm no old audio returns and the next bottle remains hidden.
 - Deny microphone permission once: written notes and the tasting should still work. Re-enable it in Safari's website settings and reconnect.
 - Reload after a reveal; return to that round and confirm its identity stays revealed.
