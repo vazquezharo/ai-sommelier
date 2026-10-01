@@ -29,7 +29,7 @@ export class Voice {
   this.pc?.close();this.pc=null;this.dc=null;this.listening=false;this.responseActive=false;
   this.audio.pause();this.audio.srcObject=null;this.emit("off");
  }
- async connect(mode:"blind"|"revealed",id?:string){
+ async connect(){
   this.close();const epoch=this.epoch;this.emit("connecting");
   this.abort=new AbortController();const signal=this.abort.signal;
   let connectionTimeout:ReturnType<typeof setTimeout>|undefined;
@@ -40,7 +40,7 @@ export class Voice {
    stream.getTracks().forEach(t=>t.enabled=false);
    if(epoch!==this.epoch){stream.getTracks().forEach(t=>t.stop());return;}
    this.stream=stream;
-   const r=await fetch("/api/voice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(mode==="blind"?{mode}:{mode,id}),signal});
+   const r=await fetch("/api/voice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"blind"}),signal});
    const token=await r.json();if(!r.ok)throw Error(token.error || "Voice is unavailable.");
    if(epoch!==this.epoch)return;
    const pc=new RTCPeerConnection();this.pc=pc;

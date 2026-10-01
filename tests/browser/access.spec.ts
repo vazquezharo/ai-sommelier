@@ -37,3 +37,12 @@ test("malformed host cookies fail closed without a server error",async({request}
  const r=await request.get("/api/host",{headers:{Cookie:"sommelier-host=bad.1234.invalid"}});
  expect(r.status()).toBe(200);expect((await r.json()).unlocked).toBe(false);
 });
+
+test("a host cannot send revealed bottle context to live Q&A",async({request})=>{
+ const login=await request.post("/api/host",{headers:{Origin:origin,"x-forwarded-for":"192.0.2.14"},data:{code:"test-host-code"}});
+ const token=login.headers()["set-cookie"]?.match(/sommelier-host=([^;]+)/)?.[1];
+ expect(token).toBeTruthy();
+ const r=await request.post("/api/voice",{headers:{Origin:origin,Cookie:"sommelier-host="+token},data:{mode:"revealed",id:"pinot"}});
+ expect(r.status()).toBe(400);
+ expect(await r.json()).toEqual({error:"Live Q&A only supports anonymous blind mode. Refresh the app."});
+});

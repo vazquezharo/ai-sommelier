@@ -66,7 +66,7 @@ export default function Home(){
  }
  function log(role:string,text:string){
   const id=progress.current.order[progress.current.index];
-  setP(prev=>({...prev,transcripts:{...prev.transcripts,[id]:[...(prev.transcripts[id]||[]),{role,text,blind:!isRevealed}].slice(-100)}}));
+  setP(prev=>({...prev,transcripts:{...prev.transcripts,[id]:[...(prev.transcripts[id]||[]),{role,text,blind:role!=="Script" || !isRevealed}].slice(-100)}}));
  }
  async function play(kind:"hint"|"overview"){
   if(kind==="overview"&&!isRevealed)return;
@@ -107,9 +107,9 @@ export default function Home(){
   stop();setMessage("");prime(livePlayer.current);
   if(demo){setMessage("Demo mode: live AI Q&A is unavailable. No answers are simulated. You can read the wine education below.");return;}
   if(!unlocked){requestUnlock();setMessage("Enter your host code once to enable live Q&A.");return;}
-  const mode=isRevealed?"revealed":"blind";
+  
   const session=new Voice(livePlayer.current!,{state:setVoiceState,message:setMessage,transcript:log,audioBlocked:()=>setAudioBlocked(true)});
-  voice.current=session;await session.connect(mode,isRevealed?wine.id:undefined);
+  voice.current=session;await session.connect();
  }
  function changeRound(index:number){
   stop();setMessage("");setScript(null);setLineup(false);setP(prev=>({...prev,index,finished:false}));
@@ -155,7 +155,7 @@ export default function Home(){
    <div className="voice-box">
     <div className="voice-status"><span className={"status-dot "+voiceState}></span><strong>{voiceState==="off"?"Microphone off":voiceState==="connecting"?"Connecting…":voiceState==="ready"?"Ready · microphone off":voiceState==="listening"?"Listening to your question":voiceState==="speaking"?"Sommelier speaking · microphone off":"Voice unavailable"}</strong></div>
     {(voiceState==="ready"||voiceState==="listening"||voiceState==="speaking") && <><button className="ptt full" disabled={voiceState==="speaking"} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);voice.current?.begin();}} onPointerUp={e=>{e.preventDefault();voice.current?.finish();}} onPointerCancel={()=>voice.current?.finish(true)} onLostPointerCapture={()=>voice.current?.finish(true)} onContextMenu={e=>e.preventDefault()} onKeyDown={e=>{if((e.key===" "||e.key==="Enter")&&!e.repeat){e.preventDefault();voice.current?.begin();}}} onKeyUp={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();voice.current?.finish();}}}>{voiceState==="listening"?"Release to send":"Hold to ask · release to send"}</button><button className="text-button" onClick={()=>{stop();setMessage("Voice session ended. Microphone released.");}}>End voice session</button></>}
-    <p className="muted">{demo?"Live Q&A is unavailable in demo mode. No answers are simulated.":isRevealed?"Ask about the grape, style, or pairing. Hold only while speaking.":"Ask about aromas, tannin, acidity, or food."}</p>
+    <p className="muted">{demo?"Live Q&A is unavailable in demo mode. No answers are simulated.":isRevealed?"Live Q&A stays anonymous. Ask about tasting techniques or general pairings.":"Ask about aromas, tannin, acidity, or food."}</p>
    </div>
    <details key={script||"hint"} open={Boolean(script)} className="details"><summary>{script==="overview"?"Overview script":"Hint script"} · {script==="overview"?"~1 minute":"~20 seconds"}</summary><p>{script==="overview"&&isRevealed?wine.overview:anonymousHint}</p></details>
    <details className="details"><summary>Tasting notes</summary>

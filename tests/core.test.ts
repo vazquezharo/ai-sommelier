@@ -26,19 +26,25 @@ test("corrupt or unsupported local progress resets safely",()=>{
  for(const raw of ["oops",null,'{}',JSON.stringify({...initialProgress(),order:Array(8).fill("pinot")})]) assert.deepEqual(restoreProgress(raw),initialProgress());
 });
 test("blind context never varies with hidden bottle or contains identity or mapping",()=>{
- const context=buildContext("blind");
+ const context=buildContext();
  for(const w of wines){
-  assert.equal(buildContext("blind",w.id),context);
+  assert.ok(!context.includes(w.id+"-overview"));
   assert.ok(!context.includes(w.producer));assert.ok(!context.includes(w.name));assert.ok(!context.includes(w.grape));
  }
  assert.ok(context.includes(anonymousHint));assert.ok(!/Wine [1-8]|Paso Robles|Sonoma|Tuscany/.test(context));
- assert.notEqual(buildContext("revealed","pinot"),context);
- assert.throws(()=>buildContext("revealed","bogus"));
+ assert.ok(context.includes("PERMANENT BLIND-TASTING RULES"));
+ assert.ok(context.includes("Never confirm OR reject a guess"));
+ assert.ok(context.includes("Do not echo identifying names"));
+ assert.ok(context.includes("including after a host UI reveal"));
 });
 test("browser code never reads long-lived key or sends a blind bottle id",()=>{
  const ui=readFileSync("app/page.tsx","utf8"),voice=readFileSync("lib/voice.ts","utf8");
  assert.ok(!ui.includes("OPENAI_API_KEY"));assert.ok(!voice.includes("OPENAI_API_KEY"));
- assert.ok(voice.includes('mode==="blind"?{mode}:{mode,id}'));
+ assert.ok(voice.includes('JSON.stringify({mode:"blind"})'));
+ assert.ok(ui.includes("await session.connect()"));
+ const route=readFileSync("app/api/voice/route.ts","utf8");
+ assert.ok(route.includes('if(body.mode!=="blind")'));
+ assert.ok(route.includes("const instructions=buildContext()"));
  assert.ok(voice.includes('t.enabled=false'));
  assert.ok(voice.includes('epoch!==this.epoch'));
  assert.ok(voice.includes('this.pc?.close()'));

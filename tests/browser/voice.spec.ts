@@ -44,7 +44,7 @@ test("simulated WebRTC PTT, Stop, reconnect, reveal and fresh blind context",asy
  await page.getByRole("button",{name:"Next wine",exact:true}).click();
  await page.evaluate(()=>(window as unknown as {voiceTest:{stale:((e:{data:string})=>void)|null}}).voiceTest.stale?.({data:JSON.stringify({type:"response.output_audio_transcript.done",transcript:"OLD WINE SPOILER"})}));
  await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();
- expect(payloads).toEqual([{mode:"blind"},{mode:"blind"},{mode:"revealed",id:"pinot"},{mode:"blind"}]);
+ expect(payloads).toEqual([{mode:"blind"},{mode:"blind"},{mode:"blind"},{mode:"blind"}]);
  await expect(page.getByText("Transcript (0)",{exact:true})).toBeVisible();
  await expect(page.getByText("OLD WINE SPOILER",{exact:true})).not.toBeVisible();
  await page.getByRole("button",{name:"End voice session",exact:true}).click();

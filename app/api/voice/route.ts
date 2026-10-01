@@ -5,9 +5,9 @@ export async function POST(req:Request){
  try {
   await paid(req,"voice");
   const body=await req.json();
-  if(body.mode!=="blind" && body.mode!=="revealed") return Response.json({error:"Invalid mode"},{status:400});
+  if(body.mode!=="blind") return Response.json({error:"Live Q&A only supports anonymous blind mode. Refresh the app."},{status:400});
   if(body.mode==="blind" && Object.keys(body).some(k=>k!=="mode")) return Response.json({error:"Blind requests must contain only mode."},{status:400});
-  const instructions=buildContext(body.mode,body.mode==="revealed"?body.id:undefined);
+  const instructions=buildContext();
   const model=process.env.OPENAI_REALTIME_MODEL||"gpt-realtime-2.1";
   const response=await fetch("https://api.openai.com/v1/realtime/client_secrets",{
    method:"POST",headers:{"Authorization":"Bearer "+openAIKey(),"Content-Type":"application/json"},
