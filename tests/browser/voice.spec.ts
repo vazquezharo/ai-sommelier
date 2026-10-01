@@ -29,7 +29,7 @@ test("simulated WebRTC PTT, Stop, reconnect, reveal and fresh blind context",asy
  await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();
  await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>(window as unknown as {voiceTest:{enabled:boolean}}).voiceTest.enabled)).toBeFalsy();
- const ptt=page.getByRole("button",{name:"Hold to ask · release to send"});const box=(await ptt.boundingBox())!;
+ const ptt=page.getByRole("button",{name:"Hold to ask · release to send"});await ptt.scrollIntoViewIfNeeded();const box=(await ptt.boundingBox())!;
  await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
  await expect(page.getByText("Listening to your question",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>(window as unknown as {voiceTest:{enabled:boolean}}).voiceTest.enabled)).toBeTruthy();
