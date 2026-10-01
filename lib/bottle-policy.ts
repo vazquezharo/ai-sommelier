@@ -17,9 +17,9 @@ export function safeSource(value:unknown):string|null{
 }
 type Output={type?:string;action?:{sources?:{url?:unknown}[]};content?:{type?:string;text?:string;annotations?:{type?:string;url?:unknown}[]}[]};
 export function responseText(data:{output?:Output[]}){return (data.output||[]).flatMap(o=>o.content||[]).filter(c=>c.type==="output_text").map(c=>c.text||"").join("");}
-export function researchSources(data:{output?:Output[]}){
+export function researchSources(data:{output?:Output[]},limit=2){
  const urls=(data.output||[]).flatMap(o=>[...(o.action?.sources||[]).map(s=>s.url),...(o.content||[]).flatMap(c=>(c.annotations||[]).filter(a=>a.type==="url_citation").map(a=>a.url))]);
- return [...new Set(urls.map(safeSource).filter((u):u is string=>Boolean(u)))].slice(0,2);
+ return [...new Set(urls.map(safeSource).filter((u):u is string=>Boolean(u)))].slice(0,limit);
 }
 export function cleanOverview(value:unknown,allowed:string[]){
  const v=value as {overview?:unknown;facts?:unknown};
@@ -30,9 +30,9 @@ export function cleanOverview(value:unknown,allowed:string[]){
  return {overview:text,facts};
 }
 
-export function cleanFacts(value:unknown,allowed:string[]){
+export function cleanFacts(value:unknown,allowed:string[],limit=2){
  return Array.isArray(value)?value.flatMap(f=>{
   if(!f||typeof f!=="object")return [];const claim=(f as {claim?:unknown}).claim,url=safeSource((f as {url?:unknown}).url);
-  return typeof claim==="string"&&claim.length<=160&&url&&allowed.includes(url)?[{claim:claim.trim(),url}]:[];
- }).slice(0,2):[];
+  return typeof claim==="string"&&claim.trim().length>0&&claim.length<=160&&url&&allowed.includes(url)?[{claim:claim.trim(),url}]:[];
+ }).slice(0,limit):[];
 }

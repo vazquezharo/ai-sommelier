@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {cleanLabel,safeSource,cleanOverview,researchSources} from "../lib/bottle-policy";
+import {cleanLabel,safeSource,cleanOverview,researchSources,cleanFacts} from "../lib/bottle-policy";
 import {answerTicket,ticketText,sealBottle,unsealBottle} from "../lib/bottle";
 test("photo labels preserve unknown vintage, grape and region rather than guessing",()=>{
  assert.deepEqual(cleanLabel({producer:" Producer ",name:"Bottle",grape:null,region:null,vintage:null}),{producer:"Producer",name:"Bottle",grape:null,region:null,vintage:null});
@@ -24,4 +24,13 @@ test("photo audio tickets are signed, short-lived, host- and bottle-scoped",()=>
 test("private photo cookie is encrypted and rejects tampering",()=>{
  const b={id:"a".repeat(32),label:{producer:"Photo Estate",name:"Reserve",grape:null,region:null,vintage:null},confidence:"low" as const,note:"Check label",revealed:false,overview:null,facts:[],sources:[],researchNote:"",expires:Date.now()+10000};
  const cookie=sealBottle(b);assert.ok(!cookie.includes("Photo Estate"));assert.deepEqual(unsealBottle(cookie),b);assert.equal(unsealBottle(cookie.slice(0,-5)+"xxxxx"),null);
+});
+
+test("expanded transient research retains later consulted pages without accepting fabricated URLs or empty notes",()=>{
+ const urls=Array.from({length:6},(_,i)=>"https://producer.example/page"+i);
+ const sources=researchSources({output:[{type:"web_search_call",action:{sources:urls.map(url=>({url}))}}]},8);
+ assert.deepEqual(sources,urls);
+ const facts=cleanFacts([...urls.map((url,i)=>({claim:"Supported note "+i,url})),{claim:"Not consulted",url:"https://fake.example/"},{claim:"  ",url:urls[0]}],sources,6);
+ assert.equal(facts.length,6);assert.equal(facts[5].url,urls[5]);assert.equal(cleanFacts(facts,sources).length,2);
+ assert.deepEqual(cleanFacts([{claim:" ",url:urls[0]}],sources,6),[]);
 });

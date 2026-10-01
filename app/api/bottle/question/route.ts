@@ -11,7 +11,7 @@ export async function POST(req:Request){
   if(input.id!==bottle.id)return Response.json({error:"This bottle session changed. Reload the photo screen."},{status:409});
   const previous=input.previousTicket?ticketText(input.previousTicket,host,bottle.id):null;
   if(input.previousTicket&&!previous)return Response.json({error:"Previous answer belongs to another session. Reconnect."},{status:409});
-  const text=await bottleAnswer(bottle,input.question,previous);
-  return Response.json({id:bottle.id,question:input.question,text,ticket:answerTicket(text,host,bottle.id),audioAvailable:true},{headers:{"Cache-Control":"no-store"}});
+  const {text,sources,notice}=await bottleAnswer(bottle,input.question,previous);
+  return Response.json({id:bottle.id,question:input.question,text,sources,notice,ticket:answerTicket(text,host,bottle.id),audioAvailable:true},{headers:{"Cache-Control":"no-store"}});
  }catch(e){return problem(e);}
 }
