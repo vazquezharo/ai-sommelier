@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {wines,anonymousHint} from "../lib/wines";
 import {buildContext} from "../lib/context";
-import {initialProgress,restoreProgress,reorder,reveal} from "../lib/progress";
+import {initialProgress,restoreProgress,reorder,reveal,identityVisible,revealLineup} from "../lib/progress";
 test("eight rounds, seven main grapes, reviewed script lengths and unknown vintage/blend",()=>{
  assert.equal(wines.length,8);assert.equal(new Set(wines.map(w=>w.grape)).size,7);
  for(const w of wines){assert.equal(w.vintage,null);assert.equal(w.exactBlend,null);const n=w.overview.split(/\s+/).length;assert.ok(n>=120&&n<=140);}
