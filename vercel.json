@@ -5,8 +5,8 @@
     "app/api/audio/route.ts": {
       "maxDuration": 60
     },
-    "app/api/voice/route.ts": {
-      "maxDuration": 30
+    "app/api/question/route.ts": {
+      "maxDuration": 60
     }
   }
 }

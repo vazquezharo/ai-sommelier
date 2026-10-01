@@ -6,6 +6,32 @@ on:
 permissions:
   contents: read
 jobs:
+  baseline:
+    if: github.event.pull_request.head.sha == 'ded916071960aee57fcad814ba83ce4f676fe7d1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 95e78ebda1d55c583aa816341f922bece540f443
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:browser
+      - uses: actions/checkout@v4
+        with:
+          path: review-source
+      - run: node review-source/scripts/review-baseline.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baseline-evidence
+          path: |
+            review-evidence
+            playwright-report
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -17,11 +43,53 @@ jobs:
       - run: npm install
       - run: npm test
       - run: npm run build
-      - run: google-chrome --version
-        timeout-minutes: 1
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: sommelier-browser-report
-          path: playwright-report
+          name: review-evidence
+          path: |
+            playwright-report
+            review-evidence
+
+  optional-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Bounded real-provider review, otherwise record unverified
+        run: node --conditions=react-server --import tsx scripts/live-review.mts
+        env:
+          OPENAI_REVIEW_API_KEY: ${{ secrets.OPENAI_REVIEW_API_KEY }}
+          RUN_LIVE_REVIEW: ${{ vars.RUN_LIVE_REVIEW }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: optional-live-evidence
+          path: review-evidence
+
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npx playwright install --with-deps webkit
+      - run: npm run build
+      - run: npm run test:browser
+        env:
+          SOMMELIER_BROWSER: webkit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: webkit-review-evidence
+          path: |
+            playwright-report
+            review-evidence

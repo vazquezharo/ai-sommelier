@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "audio:generate": "node scripts/generate-audio.mjs",
+    "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
+    "audio:generate": "node --conditions=react-server --import tsx scripts/generate-audio.mjs",
     "test:browser": "playwright test"
   },
   "dependencies": {

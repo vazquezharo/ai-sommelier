@@ -6,6 +6,8 @@ const buckets = new Map<string,{count:number;until:number}>();
 export function missingConfiguration(){return resolveConfiguration(process.env).missing;}
 export function openAIKey(){return resolveConfiguration(process.env).apiKey;}
 export function configured(){return missingConfiguration().length===0;}
+export function hostConfigured(){const c=resolveConfiguration(process.env);return Boolean(c.hostAccessCode&&c.sessionSecret);}
+export async function requireHost(req:Request,checkOrigin=true){if(checkOrigin)sameOrigin(req);if(!hostConfigured()||!await hostId())throw Error("Unlock host access first.");}
 export function sameOrigin(req:Request) { const origin=req.headers.get("origin"); const url=new URL(req.url); const protocol=req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || url.protocol.slice(0,-1); const host=req.headers.get("host") || url.host; if (!origin || origin!==protocol+"://"+host) throw new Error("Origin rejected"); }
 export function limit(key:string,max:number,windowMs:number){
  const now=Date.now();
@@ -15,7 +17,7 @@ export function limit(key:string,max:number,windowMs:number){
  if(++b.count>max) throw new Error("Request limit reached. Try again later.");
  buckets.set(key,b);
 }
-const sign=(s:string)=>createHmac("sha256",process.env.HOST_SESSION_SECRET || "").update(s).digest("hex");
+const sign=(s:string)=>createHmac("sha256",resolveConfiguration(process.env).sessionSecret).update(s).digest("hex");
 export function validCode(code:string){
  const expected=resolveConfiguration(process.env).hostAccessCode;
  const a=Buffer.from(code),b=Buffer.from(expected);
@@ -27,7 +29,7 @@ export async function createHostSession(){
 }
 export async function hostId(){
  const c=(await cookies()).get("sommelier-host")?.value;
- if(!c || !process.env.HOST_SESSION_SECRET) return null;
+ if(!c || !resolveConfiguration(process.env).sessionSecret) return null;
  const parts=c.split(".");if(parts.length!==3)return null;
  const [id,expiry,sig]=parts;
  if(!/^[a-f0-9]{32}$/.test(id)||!/^\d{13}$/.test(expiry)||Number(expiry)<Date.now()||!/^[a-f0-9]{64}$/.test(sig))return null;
@@ -39,12 +41,14 @@ export async function paid(req:Request,kind:"voice"|"audio"){
  sameOrigin(req);
  if(!configured()) throw new Error("Demo mode: live AI is not configured.");
  const id=await hostId();if(!id) throw new Error("Unlock host access first.");
- limit(kind+":"+id,kind==="voice"?24:40,6*60*60*1000);
+ limit(kind+":"+id,kind==="voice"?120:160,6*60*60*1000);
  limit("burst:"+id,8,60*1000);
  return id;
 }
 export function problem(error:unknown){
- const message=error instanceof Error ? error.message : "Service unavailable";
- const status=/Origin/.test(message)?403:/Unlock/.test(message)?401:/limit|busy/.test(message)?429:/Demo/.test(message)?503:502;
+ const raw=error instanceof Error?error.message:"";
+ const safe=/^(Origin rejected|Unlock host access first\.|Demo mode: live AI is not configured\.|Request limit reached\. Try again later\.|Service busy|Invalid tasting change\.|Finish the tasting before the lineup reveal\.|Audio provider unavailable\. The reviewed text is still available\.|Audio provider returned invalid audio\.|Audio verification (?:failed|unavailable)\. Read the reviewed text instead\.|Could not transcribe the question\. Try again or type it\.)$/;
+ const message=safe.test(raw)?raw:"Service unavailable. Written guidance remains available.";
+ const status=/Origin/.test(message)?403:/Invalid tasting|Finish the tasting/.test(message)?400:/Unlock/.test(message)?401:/limit|busy/.test(message)?429:/Demo/.test(message)?503:502;
  return Response.json({error:message},{status,headers:{"Cache-Control":"no-store"}});
 }
