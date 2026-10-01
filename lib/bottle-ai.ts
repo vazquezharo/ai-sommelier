@@ -4,7 +4,7 @@ import {responseText,labelSchema,overviewSchema,cleanLabel,cleanOverview,cleanFa
 import {sommelierPersona} from "./sommelier-persona";
 import type {BottleLabel,BottleState} from "./bottle-types";
 export async function bottleResponse(name:string,schema:unknown,input:unknown,instructions:string,search=false){
- const r=await fetch(providerURL("/responses"),{method:"POST",headers:{...providerHeaders(),"Content-Type":"application/json"},body:JSON.stringify({model:process.env.OPENAI_BOTTLE_MODEL||"gpt-4.1-mini",store:false,max_output_tokens:search?2000:600,instructions,input,...(search?{tools:[{type:"web_search",search_context_size:"low"}],tool_choice:{type:"web_search"},max_tool_calls:2,include:["web_search_call.action.sources"]}:{}),text:{format:{type:"json_schema",name,strict:true,schema}}}),signal:AbortSignal.timeout(search?15000:name==="bottle_label"?30000:20000)});
+ const r=await fetch(providerURL("/responses"),{method:"POST",headers:{...providerHeaders(),"Content-Type":"application/json"},body:JSON.stringify({model:process.env.OPENAI_BOTTLE_MODEL||"gpt-4.1-mini",store:false,max_output_tokens:search?2000:600,instructions,input,...(search?{tools:[{type:"web_search",search_context_size:"low"}],tool_choice:{type:"web_search"},max_tool_calls:2,include:["web_search_call.action.sources"]}:{}),text:{format:{type:"json_schema",name,strict:true,schema}}}),signal:AbortSignal.timeout(search?15000:name==="bottle_label"?30000:name==="bottle_answer"?15000:20000)});
  if(!r.ok)throw Error("Bottle AI is unavailable. Try again shortly.");const data=await r.json();
  try{return {value:JSON.parse(responseText(data)),data};}catch{throw Error("The label or wine information was unclear. Try a sharper photo or retry.");}
 }
