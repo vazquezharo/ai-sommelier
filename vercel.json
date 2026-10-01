@@ -1,0 +1,12 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm test && npm run build",
+  "functions": {
+    "app/api/audio/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/voice/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -1,0 +1,136 @@
+[
+  {
+    "id": "pinot",
+    "producer": "St. Francis",
+    "name": "Pinot Noir",
+    "grape": "Pinot Noir",
+    "vintage": null,
+    "exactBlend": null,
+    "region": null,
+    "verification": "Producer source confirms a standard Sonoma County Pinot Noir. The host has not supplied the bottle tier or vintage; exact bottle region remains unconfirmed.",
+    "sources": [
+      {
+        "url": "https://www.stfranciswinery.com/shop-our-wines/pinot-noir-sonoma-county/",
+        "claim": "Producer’s standard Pinot Noir page identifies Sonoma County. Exact bottle tier and vintage remain unconfirmed."
+      }
+    ],
+    "overview": "You may notice cherry, raspberry, or a gentle earthy note. Pinot Noir is often light to medium in body, with lively acidity and relatively gentle tannin. Acidity is the mouthwatering sensation; tannin is the drying grip on your gums. A useful clue is that combination of red fruit, freshness, and a lighter frame. Try it with roast chicken or mushrooms. We know the producer and grape from the host’s lineup, but the vintage, exact blend, and bottle-specific region are not yet verified. These are typical grape characteristics, not a claim that I have tasted your glass. Vanilla, if you notice it, often comes from oak; fruit words describe aromas, not added fruit. What stands out to you: the fruit, the freshness, or the texture?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "grenache",
+    "producer": "Halos de Jupiter",
+    "name": "Grenache",
+    "grape": "Grenache",
+    "vintage": null,
+    "exactBlend": null,
+    "region": null,
+    "verification": "Host corrected the main grape to Grenache. The producer describes a Grenache-focused Southern Rhône range. Exact cuvée, appellation, vintage, and blend remain unknown.",
+    "sources": [
+      {
+        "url": "https://www.halosdejupiter.com/en/",
+        "claim": "Producer describes its range around Grenache in the Southern Rhône. This verifies producer context, not the exact bottle’s appellation or blend."
+      }
+    ],
+    "overview": "You may notice strawberry, raspberry, cherry, or a gentle herbal aroma. Grenache often has medium to full body, moderate acidity, and soft to medium tannin: the drying sensation on your gums. Generous red fruit with a rounded texture can be a useful clue, though growing conditions and blending change the picture. Try this style with herb-roasted chicken or roasted vegetables. The host identifies this Halos de Jupiter as Grenache, matching the producer’s Grenache-focused Southern Rhône range. We have not identified the exact cuvée or vintage, so its appellation and blend remain unknown. These are typical grape traits, not a report from a glass I can taste. Vanilla often comes from oak; fruit descriptors do not imply added fruit. What feels most distinctive to you?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "rosso",
+    "producer": "Redi",
+    "name": "Rosso di Montepulciano",
+    "grape": "Sangiovese-based",
+    "vintage": null,
+    "exactBlend": null,
+    "region": "Montepulciano, Italy",
+    "verification": "Producer's official shop confirms Cantina del Redi Rosso di Montepulciano DOC and Italian origin. The host describes it as Sangiovese-based; vintage and exact blend remain unknown.",
+    "sources": [
+      {
+        "url": "https://www.vecchiacantinashop.com/en/shop/cantina-del-redi/vini-rossi/rosso-di-montepulciano-cantina-del-redi/",
+        "claim": "Official producer shop identifies Rosso di Montepulciano DOC, Origin Italy. Descriptors on this undated page are producer descriptions, not guaranteed sensations in the host's glass; no vintage, blend, alcohol or aging claim is transferred."
+      }
+    ],
+    "overview": "You may notice sour cherry, red plum, dried herbs, or a savory edge. Sangiovese often has medium body, lively acidity, and firm tannin, the drying grip on your gums. Its mouthwatering red fruit and savory character can be useful clues. Try it with tomato pasta: the wine’s freshness often works well with the sauce. Rosso di Montepulciano refers to a wine associated with the town of Montepulciano; it does not identify the Montepulciano grape. The lineup describes this bottle as Sangiovese-based. Another round shares that main grape, but we will not invent differences in aging, blend, or flavor between unknown vintages. Vintage and exact blend remain unknown. Vanilla often comes from oak, and fruit descriptors do not imply added fruit. What does the acidity feel like to you?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "malbec",
+    "producer": "Edmundo",
+    "name": "Malbec",
+    "grape": "Malbec",
+    "vintage": null,
+    "exactBlend": null,
+    "region": null,
+    "verification": "Identity supplied by host. Bottle-specific facts and region pending producer verification.",
+    "sources": [],
+    "overview": "You may notice plum, blackberry, or violet-like aromas. Malbec often has medium to full body, moderate acidity, and substantial tannin, sometimes with a rounded feel. Tannin is the drying sensation on your gums, not a flavor. A useful clue can be that combination of dark fruit and a broad, generous texture, though other grapes can share it. Try this style with grilled steak or smoky roasted mushrooms. The host’s lineup names Edmundo Malbec; without a verified producer match and vintage, we should not assume a country, region, exact blend, or oak treatment. These are typical grape characteristics rather than observations from your actual glass. Vanilla often comes from oak, and fruit words do not mean added fruit. What feels more noticeable here: freshness, dryness, or body?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "chianti",
+    "producer": "Cantalici",
+    "name": "Baruffo Chianti Classico",
+    "grape": "Sangiovese-based",
+    "vintage": null,
+    "exactBlend": null,
+    "region": "Chianti Classico, Italy",
+    "verification": "Producer source confirms Baruffo Chianti Classico DOCG. Host supplied Sangiovese-based. Vintage and exact blend remain unknown; no aging or blend assumptions are applied to your bottle.",
+    "sources": [
+      {
+        "url": "https://www.cantalici.it/it/shop/chianti-classico-baruffo/",
+        "claim": "Producer identifies Baruffo as Chianti Classico DOCG. Current page tasting descriptions are producer observations, not a guarantee for this unknown vintage."
+      }
+    ],
+    "overview": "You may notice cherry, red berries, dried herbs, or earthy aromas. Sangiovese commonly brings medium body, lively acidity, and firm tannin: that drying grip on your gums. The combination of savory red fruit and a mouthwatering finish is a useful clue. Try it with tomato-based pizza or pasta. The host’s lineup identifies Baruffo Chianti Classico as Sangiovese-based. It shares its main grape with the Rosso di Montepulciano round; that name refers to a place, not the Montepulciano grape. We cannot infer exact blends, aging, or flavor differences between these bottles without their vintages and verified facts. The comparison is an invitation to describe your own glasses. Vanilla, if present, often comes from oak; fruit words do not imply added fruit. Which sensations seem similar to you?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "tempranillo",
+    "producer": "La Enfermera",
+    "name": "Tempranillo",
+    "grape": "Tempranillo",
+    "vintage": null,
+    "exactBlend": null,
+    "region": null,
+    "verification": "Identity supplied by host. Bottle-specific facts and region pending producer verification.",
+    "sources": [],
+    "overview": "You may notice cherry, plum, dried herbs, or a savory note. Tempranillo often has medium to full body, moderate acidity, and medium to firm tannin, the drying sensation on your gums. A useful clue is its balance of fruit with a savory character, but aging and growing conditions can change that picture considerably. Try this style with roast pork or grilled vegetables. The host’s lineup identifies La Enfermera as Tempranillo; the vintage, exact blend, producer match, and bottle-specific region are not verified, so we should not assign an aging category or oak regimen. This describes the grape in general, not a glass I can actually taste. Vanilla often comes from oak, while fruit descriptors do not mean added fruit. What is your most memorable aroma here?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "cabernet",
+    "producer": "J. Lohr",
+    "name": "Seven Oaks",
+    "grape": "Cabernet Sauvignon",
+    "vintage": null,
+    "exactBlend": null,
+    "region": "Paso Robles, California",
+    "verification": "Producer’s Seven Oaks page identifies Paso Robles AVA, San Luis Obispo County, California. The listed page is the 2023 release; the host bottle’s vintage, exact blend, and aging remain unknown.",
+    "sources": [
+      {
+        "url": "https://www.jlohr.com/wines/2023-seven-oaks-cabernet-sauvignon",
+        "claim": "Producer identifies Seven Oaks as Cabernet Sauvignon from Paso Robles. Vintage-specific percentages and aging on this 2023 page are not assigned to the host’s unknown vintage."
+      }
+    ],
+    "overview": "You may notice blackcurrant, blackberry, or an herbal aroma. Cabernet Sauvignon often has full body, moderate to lively acidity, and firm tannin: the drying grip that lingers on your gums. That structured feel, sometimes paired with blackcurrant or leafy notes, is a useful distinguishing clue. Try it with grilled steak or a lentil and mushroom dish. The host’s lineup names J. Lohr Seven Oaks Cabernet Sauvignon. Producer sources identify Seven Oaks with Paso Robles. Your vintage, exact blend, and bottle-specific oak details remain unknown in these notes. These are typical grape characteristics, not proof of what you must taste. Vanilla often comes from oak rather than the grape, and fruit descriptors do not imply added fruit. Does the texture seem firm, rounded, or somewhere between?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  },
+  {
+    "id": "merlot",
+    "producer": "Kendall-Jackson",
+    "name": "Vintner’s Reserve",
+    "grape": "Merlot",
+    "vintage": null,
+    "exactBlend": null,
+    "region": null,
+    "verification": "Producer’s current 2023 product page was reviewed. Its tasting and blend details apply to that listed vintage, not automatically to the host’s unknown vintage. Main grape is Merlot; exact blend and appellation remain unknown.",
+    "sources": [
+      {
+        "url": "https://www.kj.com/kendall-jackson-sonoma-county-vintners-reserve-merlot-2023-750-ml/4502312.html",
+        "claim": "Producer’s 2023 Vintner’s Reserve Merlot page identifies Sonoma County and a Merlot-led blend. This host bottle’s vintage and appellation are not confirmed, so its exact blend and region stay unknown."
+      }
+    ],
+    "overview": "You may notice plum, cherry, blackberry, or a soft herbal note. Merlot often has medium to full body, moderate acidity, and medium tannin: the drying sensation after a sip. A relatively rounded texture with plum-like fruit can be a useful clue, though Merlot can also be quite structured. Try this style with roast chicken or mushroom risotto. The host’s lineup names Kendall-Jackson Vintner’s Reserve Merlot, but the unknown vintage means we will not invent its exact blend, region, or oak treatment. These notes describe common grape traits and do not claim I have tasted the actual wine. Vanilla often comes from oak; fruit descriptors are aroma comparisons, not evidence of added fruit. Which word fits your glass best: fresh, supple, firm, or something of your own?",
+    "hint": "Look at the color, then take a gentle sniff and a small sip. Notice whether your mouth waters, your gums feel dry, or the wine feels light or weighty. Compare sensations aloud; there is no single aroma you have to find."
+  }
+]
