@@ -37,17 +37,17 @@ export async function hostId(){
  if(!timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))return null;
  return id;
 }
-export async function paid(req:Request,kind:"voice"|"audio"){
+export async function paid(req:Request,kind:"voice"|"audio"|"photo"){
  sameOrigin(req);
  if(!configured()) throw new Error("Demo mode: live AI is not configured.");
  const id=await hostId();if(!id) throw new Error("Unlock host access first.");
- limit(kind+":"+id,kind==="voice"?120:160,6*60*60*1000);
+ limit(kind+":"+id,kind==="voice"?120:kind==="photo"?24:160,6*60*60*1000);
  limit("burst:"+id,8,60*1000);
  return id;
 }
 export function problem(error:unknown){
  const raw=error instanceof Error?error.message:"";
- const safe=/^(Origin rejected|Unlock host access first\.|Demo mode: live AI is not configured\.|Request limit reached\. Try again later\.|Service busy|Invalid tasting change\.|Finish the tasting before the lineup reveal\.|Audio provider unavailable\. The reviewed text is still available\.|Audio provider returned invalid audio\.|Audio verification (?:failed|unavailable)\. Read the reviewed text instead\.|Could not transcribe the question\. Try again or type it\.)$/;
+ const safe=/^(Origin rejected|Unlock host access first\.|Demo mode: live AI is not configured\.|Request limit reached\. Try again later\.|Service busy|Invalid tasting change\.|Finish the tasting before the lineup reveal\.|Audio provider unavailable\. The reviewed text is still available\.|Audio provider returned invalid audio\.|Audio verification (?:failed|unavailable)\. Read the reviewed text instead\.|Could not transcribe the question\. Try again or type it\.|Bottle AI is unavailable\. Try again shortly\.|No readable wine label found\. Take a closer, well-lit photo\.|The label or wine information was unclear\. Try a sharper photo or retry\.|Bottle answer was unavailable\. Try a shorter question\.|Bottle notes are too long\. Try preparing the overview again\.)$/;
  const message=safe.test(raw)?raw:"Service unavailable. Written guidance remains available.";
  const status=/Origin/.test(message)?403:/Invalid tasting|Finish the tasting/.test(message)?400:/Unlock/.test(message)?401:/limit|busy/.test(message)?429:/Demo/.test(message)?503:502;
  return Response.json({error:message},{status,headers:{"Cache-Control":"no-store"}});

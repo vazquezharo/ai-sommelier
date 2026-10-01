@@ -7,6 +7,15 @@
     },
     "app/api/question/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/bottle/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/bottle/question/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/bottle/audio/route.ts": {
+      "maxDuration": 60
     }
   }
 }
