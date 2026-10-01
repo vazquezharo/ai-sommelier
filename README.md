@@ -1,10 +1,10 @@
 # The AI Sommelier
 
-A mobile-first, single-host tasting app: eight rounds blind until the final reveal by default, saved grape guesses and 1–10 table scores, local progress, host-controlled reveals, deterministic written scripts, reusable OpenAI speech audio, and browser WebRTC push-to-talk Q&A.
+A mobile-first, single-host tasting app: eight rounds blind until the final reveal by default,  local progress, host-controlled reveals, deterministic written scripts, reusable OpenAI speech audio, and browser WebRTC push-to-talk Q&A.
 
-## Blind tasting and scoring
-Setup offers two reveal modes. The default keeps all eight rounds anonymous until the host explicitly reveals the lineup at the end. Names, grapes, regions, bottle-specific notes, overviews, and previously revealed transcripts stay hidden in those rounds. Generic hints and general live education remain available. The optional per-round reveal mode retains the original flow.
-Each wine has one table grape guess and one optional 1–10 score, saved locally with notes. They stay editable while blind and become read-only once the identity is revealed. They are never sent to the AI. The finale shows numbered guesses and scores before revealing identities. This is a single-host table score, not individual participant voting.
+## Minimal tasting flow
+Start → play an optional hint → ask the sommelier → next wine. All eight rounds stay anonymous until the final lineup reveal by default. An optional per-round reveal mode is tucked inside Customize setup. Guesses and scorecards belong in the host’s separate app; this app has no score or guess inputs or results. Existing locally saved scorecard fields are retained only for backwards compatibility and are never displayed or sent to the AI.
+Audio controls are prominent; setup/reordering, written notes, transcript, education, and host access are collapsed. Asking while locked automatically opens the host-code form. Microphone remains off between explicit push-to-talk questions.
 
 ## Current verification status
 - Scripts reviewed for 120–140 words; seven distinct main grapes. Halos de Jupiter is Grenache following the host’s correction; the original Syrah entry is migrated on resume.
@@ -76,7 +76,7 @@ Notes, transcripts, reveal state, order, and progress persist in localStorage on
 ## Rehearsal checklist
 - Connect the iPhone to your Bluetooth speaker before opening Safari. Start at a moderate volume.
 - Cover labels and reorder BEFORE starting; number bottles to match. Check 8 wines / 7 grapes.
-- In default end-reveal mode, record a grape guess and a 1–10 table score for each numbered wine. Advance without revealing identities; reveal the lineup only at the finale.
+- Advance through numbered wines without revealing identities; reveal the lineup only at the finale. Record guesses and scores in your separate app.
 - Start, play a hint, and ask “What does tannin feel like?” Ask a grape guess and confirm the AI refuses to identify it.
 - At the final lineup reveal, review a wine, tap Play overview, ask a follow-up, then Stop mid-answer. Confirm the speaker goes silent.
 - Change rounds while audio is loading/playing. Confirm no old audio returns and the next bottle remains hidden.

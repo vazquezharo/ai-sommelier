@@ -25,7 +25,7 @@ test("simulated WebRTC PTT, Stop, reconnect, reveal and fresh blind context",asy
   }
   Object.defineProperty(window,"RTCPeerConnection",{value:MockPeer});
  });
- await page.goto("/");await page.locator("#reveal-mode").selectOption("each");await page.getByRole("button",{name:"Start tasting",exact:true}).click();
+ await page.goto("/");await page.getByText("Customize setup · host only",{exact:true}).click();await page.locator("#reveal-mode").selectOption("each");await page.getByRole("button",{name:"Start tasting",exact:true}).click();
  await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();
  await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>(window as unknown as {voiceTest:{enabled:boolean}}).voiceTest.enabled)).toBeFalsy();

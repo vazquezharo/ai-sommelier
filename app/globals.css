@@ -6,4 +6,6 @@
 
 .next-row{margin:16px 0}.voice-box{margin-top:16px}
 
-select{font:inherit;display:block;width:100%;min-height:48px;border:1px solid #bfae9e;border-radius:8px;padding:12px;background:white;color:var(--ink);margin:8px 0}select:focus{outline:2px solid var(--wine)}.blind-score{margin:20px 0;padding-top:16px;border-top:1px solid var(--line)}.blind-score label,.setup>label{display:block;font-weight:600;margin-top:12px}.results{list-style:none;padding:0;text-align:left}.results li{padding:14px 0;border-bottom:1px solid var(--line)}
+select{font:inherit;display:block;width:100%;min-height:48px;border:1px solid #bfae9e;border-radius:8px;padding:12px;background:white;color:var(--ink);margin:8px 0}select:focus{outline:2px solid var(--wine)}.results{list-style:none;padding:0;text-align:left}.results li{padding:14px 0;border-bottom:1px solid var(--line)}
+
+.round .wine-heading{padding:12px 0 6px}.round .wine-heading h1{font-size:30px;margin-bottom:8px}.round .wine-heading p{margin:8px 0}.round .controls{margin:12px 0}.round .voice-box{margin-top:12px;padding:12px}.round .voice-box>.muted{font-size:12px}.round .next-row{margin:12px 0}.round .details{padding:8px 0}.setup-options{margin-bottom:12px}.setup-options label{display:block;font-weight:600;margin-top:12px}

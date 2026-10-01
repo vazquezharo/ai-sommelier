@@ -1,6 +1,6 @@
 import {test,expect} from "@playwright/test";
 test("mobile and desktop layout screenshots",async({page},info)=>{
- await page.goto("/");await page.locator("#reveal-mode").selectOption("each");await expect(page.getByRole("heading",{name:"Set the table."})).toBeVisible();
+ await page.goto("/");await page.getByText("Customize setup · host only",{exact:true}).click();await page.locator("#reveal-mode").selectOption("each");await expect(page.getByRole("heading",{name:"Set the table."})).toBeVisible();
  await info.attach("mobile-setup",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
  await page.getByRole("button",{name:"Start tasting",exact:true}).click();
  await info.attach("mobile-blind",{body:await page.screenshot({fullPage:true}),contentType:"image/png"});
