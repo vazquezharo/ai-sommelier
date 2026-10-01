@@ -17,7 +17,7 @@ Known identity requests receive the same neutral reviewed reply whether guesses 
 
 This sacrifices some conversational freedom and adds transcription/selection/TTS latency after release. It supports general sensory education and observations while avoiding a wine-identification oracle. Questions about named grapes get general concept guidance or a neutral reply, without applying traits to the glass. New catalog content requires human review and the same tests.
 
-TTS is still an external generative provider: request text gating does not prove every acoustic output matches. The live test harness can re-transcribe generated MP3s; human listening and physical Safari/Bluetooth remain necessary. A passing test suite is not proof of secrecy in every possible conversation.
+Before any audio bytes reach the browser, the entire generated or private-file clip is transcribed server-side and compared against the approved script (case/punctuation only are normalized). Added, missing or substituted words block playback with a clear text fallback. Only validated clips are cached. This adds an ASR call and latency on first use or a server cold start; cached clips avoid repeating it. Strict matching may reject harmless pronunciation/transcription differences, especially in revealed proper names. TTS and ASR remain external generative providers: transcription can mishear audio, so this extra gate is not proof of acoustic secrecy. Human listening and physical Safari/Bluetooth remain necessary. A passing test suite is not proof of secrecy in every possible conversation.
 
 ## Setup
 Node 20.9+:
@@ -41,7 +41,7 @@ Notes/progress are browser-local under ai-sommelier-v2. The old ai-sommelier-v1 
 ```sh
 npm run audio:generate
 ```
-Load your key in the shell privately first. This generates private-audio/hash.mp3 assets, not public URLs. Next traces them into the server speech route; authorization happens before a file is served. Server memory caches speech by model/voice/text; static private assets provide durable introductions. Listen once before any future deployment. Never restore old public wine-named audio.
+Load your key in the shell privately first. This generates all reviewed hints/answers/overviews as private-audio/hash.mp3 assets through the transcript gate, not public URLs. Next traces them into the server speech route; authorization happens before a file is served. Server memory caches speech by model/voice/text; static private assets provide durable introductions. Listen once before any future deployment. Never restore old public wine-named audio.
 
 ## Tests and live checks
 ```sh
@@ -49,7 +49,7 @@ npm test
 npm run build
 npm run test:browser
 ```
-Browser checks use an ephemeral HTTPS proxy and explicit mock ASR/router/TTS in CI. They exercise real app/server routes with signed/encrypted cookies. Mock audio is a playable silent WAV: inspecting TTS inputs checks the text boundary, not audible words or physical Safari.
+Browser checks use an ephemeral HTTPS proxy and explicit mock ASR/router/TTS in CI. They exercise real app/server routes with signed/encrypted cookies. Mock audio is a playable silent WAV: synthetic transcript markers exercise the audio gate, not actual spoken words or physical Safari.
 
 Only CI=true plus SOMMELIER_TEST_MODE=1 selects the local mock provider. Never set these in Vercel. The production default is OpenAI. API keys are never logged by the fixtures.
 

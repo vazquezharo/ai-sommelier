@@ -11,13 +11,14 @@ export default function Home(){
  const [p,setP]=useState<Progress>(initialProgress),[loaded,setLoaded]=useState(false),[setup,setSetup]=useState(true);
  const [session,setSession]=useState<PublicTasting|null>(null),[lineup,setLineup]=useState<Lineup|null>(null),[showLineup,setShowLineup]=useState(false);
  const [demo,setDemo]=useState(true),[unlocked,setUnlocked]=useState(false),[hostConfigured,setHostConfigured]=useState(false),[configurationIssue,setConfigurationIssue]=useState("");
- const [code,setCode]=useState(""),[message,setMessage]=useState(""),[voiceState,setVoiceState]=useState<VoiceState>("off"),[typed,setTyped]=useState("");
+ const [unlockRequested,setUnlockRequested]=useState(false),[code,setCode]=useState(""),[message,setMessage]=useState(""),[voiceState,setVoiceState]=useState<VoiceState>("off"),[typed,setTyped]=useState("");
  const [playing,setPlaying]=useState<"hint"|"overview"|null>(null),[busy,setBusy]=useState(false),[hostBusy,setHostBusy]=useState(false),[script,setScript]=useState<"hint"|"overview"|null>(null),[audioBlocked,setAudioBlocked]=useState(false);
  const hostSettings=useRef<HTMLDetailsElement|null>(null),player=useRef<HTMLAudioElement|null>(null),livePlayer=useRef<HTMLAudioElement|null>(null),voice=useRef<Voice|null>(null),audioEpoch=useRef(0),fetchAbort=useRef<AbortController|null>(null),blobURL=useRef<string|null>(null),hostPending=useRef(false);
  const progress=useRef(p);progress.current=p;
  const handle=p.order[p.index],wine:WineFacts|undefined=session?.revealed[handle],isRevealed=Boolean(wine);
  const stop=useCallback(()=>{++audioEpoch.current;fetchAbort.current?.abort();fetchAbort.current=null;player.current?.pause();if(player.current){player.current.removeAttribute("src");player.current.load();}if(blobURL.current)URL.revokeObjectURL(blobURL.current);blobURL.current=null;voice.current?.stop();voice.current=null;setVoiceState("off");setPlaying(null);setBusy(false);setAudioBlocked(false);},[]);
- function requestUnlock(){if(hostSettings.current){hostSettings.current.open=true;hostSettings.current.scrollIntoView({block:"nearest"});}document.getElementById("code")?.focus();}
+ function requestUnlock(){if(hostSettings.current){hostSettings.current.open=true;hostSettings.current.scrollIntoView({block:"nearest"});}setUnlockRequested(true);}
+ useEffect(()=>{if(unlockRequested&&!unlocked){const input=document.getElementById("code");if(input){input.focus();setUnlockRequested(false);}}},[unlockRequested,unlocked,loaded,hostConfigured]);
  function applySession(s:PublicTasting){
   setSession(s);
   setP(prev=>{
@@ -66,7 +67,7 @@ export default function Home(){
    try{await el.play();}catch{if(epoch===audioEpoch.current)setAudioBlocked(true);}
   }catch(e){if(epoch===audioEpoch.current){setBusy(false);setMessage(e instanceof Error?e.message:"Audio unavailable.");}}
  }
- function newVoice(){const v=new Voice(livePlayer.current!,{state:setVoiceState,message:setMessage,transcript:log,audioBlocked:()=>setAudioBlocked(true),authRequired:()=>{setUnlocked(false);setTimeout(requestUnlock,0);}});voice.current=v;return v;}
+ function newVoice(){const v=new Voice(livePlayer.current!,{state:setVoiceState,message:setMessage,transcript:log,audioBlocked:()=>setAudioBlocked(true),authRequired:()=>{setUnlocked(false);requestUnlock();}});voice.current=v;return v;}
  async function connectVoice(){stop();setMessage("");prime(livePlayer.current);if(demo){setMessage("Demo mode: live Q&A is unavailable. No answers are simulated.");return;}if(!unlocked){requestUnlock();setMessage("Enter your host code once to enable Q&A.");return;}await newVoice().connect();}
  async function askTyped(){if(!typed.trim())return;if(demo){setMessage("Demo mode: live Q&A is unavailable. No answers are simulated.");return;}if(!unlocked){requestUnlock();return;}prime(livePlayer.current);const v=voice.current||newVoice();const q=typed;setTyped("");await v.askText(q);}
  const transcripts=(p.transcripts[handle]||[]).filter(t=>isRevealed||t.blind),note=p.notes[handle]||"";

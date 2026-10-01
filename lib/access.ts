@@ -47,7 +47,7 @@ export async function paid(req:Request,kind:"voice"|"audio"){
 }
 export function problem(error:unknown){
  const raw=error instanceof Error?error.message:"";
- const safe=/^(Origin rejected|Unlock host access first\.|Demo mode: live AI is not configured\.|Request limit reached\. Try again later\.|Service busy|Invalid tasting change\.|Finish the tasting before the lineup reveal\.|Audio provider unavailable\. The reviewed text is still available\.|Audio provider returned invalid audio\.|Could not transcribe the question\. Try again or type it\.)$/;
+ const safe=/^(Origin rejected|Unlock host access first\.|Demo mode: live AI is not configured\.|Request limit reached\. Try again later\.|Service busy|Invalid tasting change\.|Finish the tasting before the lineup reveal\.|Audio provider unavailable\. The reviewed text is still available\.|Audio provider returned invalid audio\.|Audio verification (?:failed|unavailable)\. Read the reviewed text instead\.|Could not transcribe the question\. Try again or type it\.)$/;
  const message=safe.test(raw)?raw:"Service unavailable. Written guidance remains available.";
  const status=/Origin/.test(message)?403:/Invalid tasting|Finish the tasting/.test(message)?400:/Unlock/.test(message)?401:/limit|busy/.test(message)?429:/Demo/.test(message)?503:502;
  return Response.json({error:message},{status,headers:{"Cache-Control":"no-store"}});

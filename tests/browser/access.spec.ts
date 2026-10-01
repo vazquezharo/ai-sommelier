@@ -46,3 +46,14 @@ test("expired authentication fails closed without discarding the encrypted tasti
  const status=await request.get("/api/host",{headers:{Cookie:"sommelier-host="+value+"."+sig}});expect((await status.json()).unlocked).toBe(false);
  await authenticate(request);const after=await (await request.get("/api/tasting")).json();expect(after.sessionId).toBe(before.sessionId);expect(after.order).toEqual(before.order);
 });
+
+test("generated audio must pass its full transcript gate before bytes are returned",async({request})=>{
+ await authenticate(request);
+ await request.post("http://127.0.0.1:4001/controls",{data:{tamperSpeech:true}});
+ try{
+  const r=await request.post("/api/audio",{headers:{Origin:origin},data:{kind:"answer",answerId:"serving"}});
+  expect(r.status()).toBe(502);expect(r.headers()["content-type"]).toContain("application/json");
+  expect(await r.json()).toEqual({error:"Audio verification failed. Read the reviewed text instead."});
+ }finally{await request.post("http://127.0.0.1:4001/controls",{data:{tamperSpeech:false}});}
+ const retry=await request.post("/api/audio",{headers:{Origin:origin},data:{kind:"answer",answerId:"serving"}});expect(retry.status()).toBe(200);
+});

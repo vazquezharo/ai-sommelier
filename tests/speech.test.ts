@@ -1,0 +1,3 @@
+import {test} from "node:test";import assert from "node:assert/strict";import {matchesApprovedSpeech} from "../lib/speech-policy";
+test("acoustic transcript gate accepts punctuation/case only",()=>{assert.ok(matchesApprovedSpeech("I won’t confirm guesses. Tell me what you notice!","I won't confirm guesses, tell me what you notice."));});
+test("acoustic transcript gate rejects additions, omissions and substitutions before playback",()=>{for(const heard of ["Tannin dries your gums. This is Grenache.","Tannin dries your gums. R3NACHE","Tannin dries your gums. Initial G.","Tannin dries.","Tannin means Malbec.",null])assert.equal(matchesApprovedSpeech("Tannin dries your gums.",heard),false);});

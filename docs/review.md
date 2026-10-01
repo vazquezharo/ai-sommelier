@@ -58,3 +58,9 @@ Candidate score: 84/100 (secrecy 35; guidance 19; voice 12; recovery 5; mobile 8
 
 ## Pass 3 (in progress)
 Preserve the host's chosen reveal mode across unstarted reorder responses. Add a host-auth-expiry callback that immediately closes microphone/audio and focuses login. Test mic disconnect/reconnect, Stop during pending TTS fetch, retained encrypted state after expired auth, and actual computed button contrast. Retest all affected and regression checks.
+
+### Pass 3 results
+Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36924394823: 38/38 unit, production build, 25/26 browser checks passed. The reveal mode bug is fixed. Expired host access correctly closes the microphone but scheduled focus races React's conditional login render; one accessibility check failed. Candidate 87/100: secrecy 35, guidance 19, voice 12, recovery 9, mobile 7, maintainability 5. Critical real-provider and physical checks remain unverified, so acceptance is not established.
+
+## Pass 4
+Replace the timeout focus with a post-render effect. Add a pre-playback acoustic transcript gate: the completed generated/private clip must match the approved text before any bytes return to the browser or enter the verified cache. Extra or missing words fail closed to written guidance. Add pure-policy tests and an actual server-route test with a deliberately tampered mock clip, plus retry after failed verification. This is layered protection, not a claim that ASR can prove acoustic truth. First-use latency/cost increases; exact transcription mismatch may block legitimate clips. Real output remains unverified without review credentials.

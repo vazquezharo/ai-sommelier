@@ -1,6 +1,7 @@
 // Optional bounded real-provider checks. No deployment or credential rotation.
 import {mkdir,writeFile,readFile} from "node:fs/promises";
 import {answers,reviewedAnswer,validateChoice,answerIds} from "../lib/guidance";
+import {matchesApprovedSpeech} from "../lib/speech-policy";
 import {routerInstructions} from "../lib/context";
 await mkdir("review-evidence",{recursive:true});
 const key=process.env.OPENAI_REVIEW_API_KEY?.trim();
@@ -32,9 +33,9 @@ if(!key||process.env.RUN_LIVE_REVIEW!=="true"){
   const normalized=normalize(text);
   for(const w of wineData)for(const label of [w.producer,w.name,w.grape,w.region].filter(Boolean))if(normalized.includes(normalize(label)))throw Error("Possible acoustic identity disclosure detected.");
   const expected=new Set(normalize(answers[id]).trim().split(" "));const heard=new Set(normalized.trim().split(" "));const overlap=[...expected].filter(w=>heard.has(w)).length/expected.size;
-  const acousticMatch=overlap>=0.85;if(!acousticMatch)throw Error("Acoustic transcript did not sufficiently match approved text.");
+  const acousticMatch=matchesApprovedSpeech(answers[id],text);if(!acousticMatch)throw Error("Acoustic transcript did not sufficiently match approved text.");
   evidence.push({id,acousticMatch,words:text.split(/\s+/).length});
  }
- const result={status:"passed limited live cases",apiCalls:calls,evidence,limitations:"ASR overlap and identity scan are limited checks, not proof. Human listening and physical iPhone remain required."};
+ const result={status:"passed limited live cases",apiCalls:calls,evidence,limitations:"Exact ASR transcript comparison and identity scan are limited checks, not proof. Human listening and physical iPhone remain required."};
  await writeFile("review-evidence/live-status.json",JSON.stringify(result,null,2));console.log(JSON.stringify(result));
 }
