@@ -4,11 +4,12 @@ import {cleanLabel,safeSource,cleanOverview,researchSources} from "../lib/bottle
 import {answerTicket,ticketText,sealBottle,unsealBottle} from "../lib/bottle";
 test("photo labels preserve unknown vintage, grape and region rather than guessing",()=>{
  assert.deepEqual(cleanLabel({producer:" Producer ",name:"Bottle",grape:null,region:null,vintage:null}),{producer:"Producer",name:"Bottle",grape:null,region:null,vintage:null});
+ assert.equal(cleanLabel({producer:null,name:"Bottle",grape:null,region:null,vintage:"2020"}).vintage,"2020");
  assert.throws(()=>cleanLabel({producer:null,name:"Bottle",grape:null,region:null,vintage:"unknown"}));
  assert.throws(()=>cleanLabel({producer:"x".repeat(101),name:null,grape:null,region:null,vintage:null}));
 });
 test("researched facts require actual returned source URLs",()=>{
- const overview=Array(125).fill("observation").join(" ");
+ const overview=Array(125).fill("notice").join(" ");
  const sources=researchSources({output:[{type:"web_search_call",action:{sources:[{url:"https://producer.example/wine"}]}}]});
  assert.deepEqual(cleanOverview({overview,facts:[{claim:"Supported",url:sources[0]},{claim:"Fabricated",url:"https://invented.example"}]},sources).facts,[{claim:"Supported",url:sources[0]}]);
  for(const url of ["javascript:alert(1)","http://producer.example","https://localhost/a","https://user:pass@example.com"])assert.equal(safeSource(url),null);

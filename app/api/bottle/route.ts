@@ -22,6 +22,7 @@ export async function POST(req:Request){
   if(body.action==="clear"&&Object.keys(body).length===1){await clearBottle();return Response.json({bottle:null},{headers});}
   if(body.action!=="reveal"||Object.keys(body).length!==3)return bad("Confirm the label using Reveal & prepare overview.");
   const bottle=await getBottle();if(!bottle||body.id!==bottle.id)return Response.json({error:"This photo session changed. Scan the bottle again."},{status:409,headers});
+  if(bottle.revealed)return Response.json({error:"This bottle is already revealed. Scan another photo to change it."},{status:409,headers});
   let label;try{label=cleanLabel(body.label);}catch{return bad("Check the label fields. Use a four-digit vintage, NV, or leave it unknown.");}
   if(!label.producer&&!label.name)return bad("Enter a producer or wine name before revealing.");
   await paid(req,"photo");const overview=await prepareBottle(label);const revealed={...bottle,label,...overview,revealed:true};await setBottle(revealed);return Response.json({bottle:revealed},{headers});

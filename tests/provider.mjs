@@ -21,6 +21,10 @@ http.createServer(async(req,res)=>{
    const value={isWine:!blankLabel,producer:"Photo Estate",name:"Label Reserve",grape:"Cabernet Sauvignon",region:null,vintage:null,confidence:"medium",note:"Vintage is unreadable."};
    json(res,{output:[{content:[{type:"output_text",text:JSON.stringify(value)}]}]});return;
   }
+  if(name==="bottle_research"){
+   if(failResearch){json(res,{},503);return;}
+   json(res,{output:[{type:"web_search_call",action:{sources:[{url:"https://photo-estate.example/wines/reserve"}]}},{content:[{type:"output_text",text:JSON.stringify({facts:[{claim:"Producer lists this cuvée on its website.",url:"https://photo-estate.example/wines/reserve"},{claim:"Invented unsupported fact.",url:"https://invented.example/fake"}]})}]}]});return;
+  }
   if(name==="bottle_overview"){
    if(failResearch){json(res,{},503);return;}
    json(res,{output:[{type:"web_search_call",action:{sources:[{url:"https://photo-estate.example/wines/reserve"}]}},{content:[{type:"output_text",text:JSON.stringify({overview:"Meet Label Reserve from Photo Estate. The label details are host confirmed; the exact blend and any unreadable vintage remain unknown. Start by looking at the color, then give the glass a gentle swirl. You may notice fruit, floral, earthy, or spicy aromas, but there is no required answer. Fruit descriptions compare aromas; they do not imply added fruit. Vanilla often comes from oak. Body means how light or weighty the wine feels. Acidity makes your mouth water, while tannin can feel like a drying grip on your gums. Notice which sensations linger in the finish. A useful distinction is to compare freshness with drying grip, rather than treating them as the same sensation. Try a bite of roasted vegetables, then another small sip. Tell me what changes for you.",facts:[{claim:"Producer lists this cuvée on its website.",url:"https://photo-estate.example/wines/reserve"},{claim:"Invented unsupported fact.",url:"https://invented.example/fake"}]})}]}]});return;

@@ -26,9 +26,13 @@ export function cleanOverview(value:unknown,allowed:string[]){
  if(!v||typeof v.overview!=="string"||v.overview.length>1400)throw Error("Invalid overview");
  const text=v.overview.trim(),words=text.split(/\s+/).length;
  if(words<110||words>150)throw Error("Invalid overview length");
- const facts=Array.isArray(v.facts)?v.facts.flatMap(f=>{
+ const facts=cleanFacts(v.facts,allowed);
+ return {overview:text,facts};
+}
+
+export function cleanFacts(value:unknown,allowed:string[]){
+ return Array.isArray(value)?value.flatMap(f=>{
   if(!f||typeof f!=="object")return [];const claim=(f as {claim?:unknown}).claim,url=safeSource((f as {url?:unknown}).url);
   return typeof claim==="string"&&claim.length<=160&&url&&allowed.includes(url)?[{claim:claim.trim(),url}]:[];
  }).slice(0,2):[];
- return {overview:text,facts};
 }

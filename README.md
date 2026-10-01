@@ -2,8 +2,8 @@
 
 Mobile-first, single-host blind tasting for eight covered bottles. Minimal controls: optional hint, ask the sommelier, Stop, next wine. Written notes/transcripts are collapsed. No accounts, scoring, database or voting.
 
-## Review branch — do not deploy
-Changes are on review/blind-safety only. Main and the live site remain unchanged. See [docs/review.md](docs/review.md) for the fixed rubric, baseline, passes, tests, deductions and unverified checks. The current data/wines.json is authoritative; this review does not change the lineup.
+## Blind-tasting review
+The review was initially isolated on review/blind-safety and subsequently deployed with explicit user authorization. See [docs/review.md](docs/review.md) for the fixed rubric, baseline, passes, tests, deductions and unverified checks. The current data/wines.json is authoritative; this review does not change the lineup.
 
 ## Safety boundary
 Private identity is imported only through server-only lib/wines.ts. Browser rounds use randomly generated opaque handles, not grape/wine IDs. Answer-bearing public source downloads and public overview MP3s have been removed. Host-only lineup is an authenticated, explicitly requested exception; do not show that view to guests. Public tasting status returns only anonymous handles and facts for rounds already revealed on the server.
@@ -58,7 +58,7 @@ Only CI=true plus SOMMELIER_TEST_MODE=1 selects the local mock provider. Never s
 For optional live checks, add GitHub Actions secret OPENAI_REVIEW_API_KEY and variable RUN_LIVE_REVIEW=true. The dedicated review workflow runs the bounded live harness if both are present. It never calls the live app, changes credentials, or deploys. Without both, the harness records unverified rather than a pass. A real project key and budget are required; do not put keys in chat.
 
 ## Future hosting (outside this review)
-Import vazquezharo/ai-sommelier into a separate Vercel project, root directory repository root, Next.js. Configure private env vars. Vercel supplies HTTPS; laptop localhost cannot be used from an iPhone. Add sommelier.haroldvazquez.com under the app’s Domains and use exactly the DNS record Vercel displays. This review must not merge/deploy over production.
+Import vazquezharo/ai-sommelier into a separate Vercel project, root directory repository root, Next.js. Configure private env vars. Vercel supplies HTTPS; laptop localhost cannot be used from an iPhone. Add sommelier.haroldvazquez.com under the app’s Domains and use exactly the DNS record Vercel displays. Production releases require user authorization.
 
 ## Physical iPhone rehearsal
 1. Safari over HTTPS, Bluetooth speaker paired, moderate volume.
@@ -79,7 +79,7 @@ Import vazquezharo/ai-sommelier into a separate Vercel project, root directory r
 ## Photo bottle lookup
 Open **Scan a bottle** in Setup or Host settings, or visit `/bottle`. Choose a photo or use the camera. The browser resizes to 1600px, converts to JPEG, removes EXIF, and uploads at most 2 MiB. JPEG/PNG/WebP are accepted on the server; unsupported HEIC decoding shows a conversion/retake message. Original photos are not stored by this app. OpenAI processes the image under its API data policy; `store:false` does not imply zero retention.
 
-Photo mode is explicitly host-only before reveal. Review/correct the detected label and press **Reveal & prepare overview**. Unreadable vintage, grape or region stays null; exact blends are never inferred. OpenAI Responses image inputs read the label; a separate supported `web_search` call researches producer sources. Returned source URLs are checked against actual tool results/citations before attaching bottle-specific notes. The overview presents typical style guidance; AI research may still select an imperfect bottle match, so check the producer links. If research fails, an explicitly labeled general written fallback remains available.
+Photo mode is explicitly host-only before reveal. Review/correct the detected label and press **Reveal & prepare overview**. Unreadable vintage, grape or region stays null; exact blends are never inferred. OpenAI Responses image inputs read the label; a separate supported `web_search` call researches producer sources. Returned source URLs are checked against actual tool results/citations before attaching bottle-specific notes. Only notes with returned source URLs reach the separate overview-generation call; its grape/style guidance can use these notes when the label alone is incomplete. The overview presents typical style guidance; AI research may still select an imperfect bottle match, so check the producer links. If research fails, an explicitly labeled general written fallback remains available.
 
 Play the overview, ask bottle questions by hold-to-talk or typing, and use Stop. Bottle-specific Q&A is enabled only after server-confirmed reveal. Its answers may identify this revealed bottle. Photo cookies are encrypted, HttpOnly, Secure and path-scoped to `/api/bottle`; signed audio tickets bind answer text to the current bottle and host for 30 minutes. The last signed answer can support a follow-up; no cross-bottle history is accepted. The eight-round blind Q&A receives no photo data or history. Separate notes/transcripts persist locally for revealed photos; the label/overview session lasts seven days. Taking a new photo or returning to blind tasting cancels playback/recording.
 
