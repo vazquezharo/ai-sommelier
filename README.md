@@ -25,7 +25,7 @@ npm start
 ```
 
 Without all three required server values, the app is explicitly in demo mode.
-Set OPENAI_API_KEY, HOST_ACCESS_CODE, and HOST_SESSION_SECRET privately on the server. Use a long random session secret and a strong host code. Never use NEXT_PUBLIC_ for these values. The code is exchanged for an HttpOnly, same-site signed cookie valid for six hours. Paid routes reject cross-origin requests and limit each host to 24 voice sessions and 40 audio requests per six hours, plus eight requests per minute per instance. Voice sessions close after ten minutes; each question is capped at 30 seconds. Short-lived Realtime client secrets expire after 60 seconds.
+Set OPENAI_API_KEY (or Open_AI_Key), HOST_ACCESS_CODE (or Host_Access_Code), and HOST_SESSION_SECRET privately on the server. Standard uppercase names take precedence when both are configured. Use a long random session secret and a strong host code. Never use NEXT_PUBLIC_ for these values. The code is exchanged for an HttpOnly, same-site signed cookie valid for six hours. Paid routes reject cross-origin requests and limit each host to 24 voice sessions and 40 audio requests per six hours, plus eight requests per minute per instance. Voice sessions close after ten minutes; each question is capped at 30 seconds. Short-lived Realtime client secrets expire after 60 seconds.
 
 ## Durable introductions
 Load OPENAI_API_KEY in your shell environment (the script intentionally does not read or log secrets from a file), then:

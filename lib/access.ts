@@ -1,8 +1,10 @@
 import "server-only";
+import {resolveConfiguration} from "./config";
 import { cookies } from "next/headers";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 const buckets = new Map<string,{count:number;until:number}>();
-export function missingConfiguration(){return ["OPENAI_API_KEY","HOST_ACCESS_CODE","HOST_SESSION_SECRET"].filter(name=>!process.env[name]?.trim());}
+export function missingConfiguration(){return resolveConfiguration(process.env).missing;}
+export function openAIKey(){return resolveConfiguration(process.env).apiKey;}
 export function configured(){return missingConfiguration().length===0;}
 export function sameOrigin(req:Request) { const origin=req.headers.get("origin"); const url=new URL(req.url); const protocol=req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || url.protocol.slice(0,-1); const host=req.headers.get("host") || url.host; if (!origin || origin!==protocol+"://"+host) throw new Error("Origin rejected"); }
 export function limit(key:string,max:number,windowMs:number){
@@ -15,7 +17,7 @@ export function limit(key:string,max:number,windowMs:number){
 }
 const sign=(s:string)=>createHmac("sha256",process.env.HOST_SESSION_SECRET || "").update(s).digest("hex");
 export function validCode(code:string){
- const expected=process.env.HOST_ACCESS_CODE || "";
+ const expected=resolveConfiguration(process.env).hostAccessCode;
  const a=Buffer.from(code),b=Buffer.from(expected);
  return Boolean(expected && a.length===b.length && timingSafeEqual(a,b));
 }

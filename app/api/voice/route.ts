@@ -1,4 +1,4 @@
-import { paid, problem } from "@/lib/access";
+import { paid, problem, openAIKey } from "@/lib/access";
 import { buildContext } from "@/lib/context";
 export const runtime="nodejs";
 export async function POST(req:Request){
@@ -10,7 +10,7 @@ export async function POST(req:Request){
   const instructions=buildContext(body.mode,body.mode==="revealed"?body.id:undefined);
   const model=process.env.OPENAI_REALTIME_MODEL||"gpt-realtime-2.1";
   const response=await fetch("https://api.openai.com/v1/realtime/client_secrets",{
-   method:"POST",headers:{"Authorization":"Bearer "+process.env.OPENAI_API_KEY,"Content-Type":"application/json"},
+   method:"POST",headers:{"Authorization":"Bearer "+openAIKey(),"Content-Type":"application/json"},
    body:JSON.stringify({expires_after:{anchor:"created_at",seconds:60},session:{type:"realtime",model,instructions,output_modalities:["audio"],max_output_tokens:900,audio:{input:{turn_detection:null,transcription:{model:"gpt-4o-mini-transcribe"}},output:{voice:process.env.OPENAI_TTS_VOICE||"marin"}}}}),
    signal:AbortSignal.timeout(20000)
   });

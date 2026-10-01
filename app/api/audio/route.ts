@@ -1,4 +1,4 @@
-import { paid, problem } from "@/lib/access";
+import { paid, problem, openAIKey } from "@/lib/access";
 import { anonymousHint, wines } from "@/lib/wines";
 import { createHash } from "node:crypto";
 const audioCache=new Map<string,Promise<ArrayBuffer>>();
@@ -14,7 +14,7 @@ export async function POST(req:Request){
   let work=audioCache.get(hash);
   if(!work){
    work=(async()=>{
-    const r=await fetch("https://api.openai.com/v1/audio/speech",{method:"POST",headers:{"Authorization":"Bearer "+process.env.OPENAI_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model,voice,input:text,instructions:"Warm approachable sommelier. Speak clearly at an unhurried pace, about 125 words per minute. Read the provided script exactly.",response_format:"mp3"}),signal:AbortSignal.timeout(50000)});
+    const r=await fetch("https://api.openai.com/v1/audio/speech",{method:"POST",headers:{"Authorization":"Bearer "+openAIKey(),"Content-Type":"application/json"},body:JSON.stringify({model,voice,input:text,instructions:"Warm approachable sommelier. Speak clearly at an unhurried pace, about 125 words per minute. Read the provided script exactly.",response_format:"mp3"}),signal:AbortSignal.timeout(50000)});
     if(!r.ok)throw new Error("Spoken audio is unavailable ("+r.status+"). Please read the script below.");
     return r.arrayBuffer();
    })();
