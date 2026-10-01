@@ -63,3 +63,8 @@ test("Stop during pending audio fetch prevents late playback",async({page})=>{
  await typed(page,"What is body?");await expect(page.getByText("Transcript (2)",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Stop speaking"}).click();await page.waitForTimeout(800);
  expect(await page.evaluate(()=>Array.from(document.querySelectorAll("audio")).every(a=>a.paused&&!a.src))).toBe(true);await expect(page.getByText("Microphone off",{exact:true})).toBeVisible();
 });
+
+test.beforeEach(async({page})=>{page.on("pageerror",e=>console.log("Browser error:",e.message));});
+test.afterEach(async({page},info)=>{
+ if(info.status!==info.expectedStatus)console.log("Voice failure evidence:",JSON.stringify(await page.evaluate(()=>({status:[...document.querySelectorAll('[role="status"]')].map(el=>el.textContent),secure:isSecureContext,hidden:document.hidden,recorder:typeof MediaRecorder,recorderName:typeof MediaRecorder==="undefined"?null:MediaRecorder.name,mock:(window as unknown as {micTest?:unknown}).micTest,hostDetails:(document.querySelector(".host-settings") as HTMLDetailsElement)?.open,media:[...document.querySelectorAll("audio")].map(a=>({paused:a.paused,error:a.error?.code}))}))));
+});
