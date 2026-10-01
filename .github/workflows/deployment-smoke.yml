@@ -1,0 +1,26 @@
+name: Verify public production release
+on:
+  push:
+    branches: [release/verify]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check deployed public endpoints without secrets or paid calls
+        run: |
+          node --input-type=module <<'JS'
+          const base="https://ai-sommelier-virid.vercel.app";
+          const checks=[];
+          for(const [path,expected,method] of [["/",200,"GET"],["/api/host",200,"GET"],["/source.json",404,"GET"],["/api/voice",410,"POST"],["/api/tasting",401,"GET"]]){
+            const r=await fetch(base+path,{method,signal:AbortSignal.timeout(15000),headers:{"Cache-Control":"no-cache"}});
+            const text=await r.text();const result={path,status:r.status,expected,pass:r.status===expected};
+            if(path==="/")result.title=text.match(/<title>(.*?)<\/title>/)?.[1];
+            if(path==="/api/host"&&r.ok){const data=JSON.parse(text);result.demo=data.demo;result.hostConfigured=data.hostConfigured;result.unlocked=data.unlocked;result.missing=data.missing;result.pass&&=data.hostConfigured===true&&data.demo===false&&data.unlocked===false;}
+            checks.push(result);
+          }
+          console.log(JSON.stringify({url:base,productionCommit:"0676bae780d5ae0c44c3fe628ccd7b2c39b1781f",checks},null,2));
+          if(checks.some(c=>!c.pass))process.exitCode=1;
+          JS
