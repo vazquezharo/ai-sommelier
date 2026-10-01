@@ -1,6 +1,7 @@
-import { configured, hostId, sameOrigin, limit, validCode, createHostSession, problem } from "@/lib/access";
+import { configured, missingConfiguration, hostId, sameOrigin, limit, validCode, createHostSession, problem } from "@/lib/access";
 export const runtime="nodejs";
-export async function GET(){return Response.json({demo:!configured(),unlocked:Boolean(await hostId())},{headers:{"Cache-Control":"no-store"}});}
+export const dynamic="force-dynamic";
+export async function GET(){return Response.json({demo:!configured(),unlocked:Boolean(await hostId()),missing:missingConfiguration()},{headers:{"Cache-Control":"no-store"}});}
 export async function POST(req:Request){
  try {
   sameOrigin(req);const ip=req.headers.get("x-forwarded-for")?.split(",")[0]||"local";limit("login:"+ip,10,15*60*1000);

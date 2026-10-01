@@ -11,6 +11,7 @@ export default function Home(){
  const [setup,setSetup]=useState(true);
  const [lineup,setLineup]=useState(false);
  const [demo,setDemo]=useState(true);
+ const [configurationIssue,setConfigurationIssue]=useState("");
  const [unlocked,setUnlocked]=useState(false);
  const [code,setCode]=useState("");
  const [message,setMessage]=useState("");
@@ -37,7 +38,7 @@ export default function Home(){
  },[]);
  useEffect(()=>{
   let stored=initialProgress();try{stored=restoreProgress(localStorage.getItem(storageKey));}catch{setMessage("Local storage is unavailable. Keep this tab open to retain progress.");}setP(stored);setSetup(!stored.started);setLoaded(true);
-  fetch("/api/host").then(r=>r.json()).then(s=>{setDemo(s.demo);setUnlocked(s.unlocked);}).catch(()=>{setDemo(true);setMessage("Server unavailable. Demo mode and written scripts still work.");});
+  fetch("/api/host",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Host status unavailable");return r.json();}).then(s=>{setDemo(s.demo);setUnlocked(s.unlocked);if(s.demo && Array.isArray(s.missing) && s.missing.length){const issue="Missing server variables: "+s.missing.join(", ")+". Set them for Production in Vercel and redeploy.";setConfigurationIssue(issue);setMessage(issue);}}).catch(()=>{setDemo(true);setConfigurationIssue("Host status could not be loaded. Refresh to retry; written scripts still work.");setMessage("Server unavailable. Demo mode and written scripts still work.");});
   return()=>{++audioEpoch.current;fetchAbort.current?.abort();voice.current?.close();};
  },[]);
  useEffect(()=>{if(loaded){try{localStorage.setItem(storageKey,JSON.stringify(p));}catch{setMessage("This browser could not save progress. Keep this tab open.");}}},[p,loaded]);
@@ -160,7 +161,7 @@ export default function Home(){
   <details className="panel host-settings"><summary>Host settings & access</summary>
    <p className="muted">Keep this device with the host. Lineup access displays identities.</p>
    <div className="controls"><button className="secondary" onClick={()=>{stop();setLineup(v=>!v);}}>Host-only lineup</button><button className="secondary" onClick={()=>{stop();setSetup(true);}}>Setup / resume</button></div>
-   {demo?<p>Demo mode works without credentials. Configure the server to enable OpenAI audio and live Q&A.</p>:unlocked?<p>Paid AI routes unlocked. Voice sessions end after ten minutes.</p>:<form onSubmit={e=>{e.preventDefault();void unlock();}}><label htmlFor="code">Host access code</label><input id="code" type="password" value={code} autoComplete="off" onChange={e=>setCode(e.target.value)}/><button className="primary full" type="submit">Unlock AI</button></form>}
+   {demo?<p>Demo mode works without credentials. {configurationIssue || "Configure the server to enable OpenAI audio and live Q&A."}</p>:unlocked?<p>Paid AI routes unlocked. Voice sessions end after ten minutes.</p>:<form onSubmit={e=>{e.preventDefault();void unlock();}}><label htmlFor="code">Host access code</label><input id="code" type="password" value={code} autoComplete="off" onChange={e=>setCode(e.target.value)}/><button className="primary full" type="submit">Unlock AI</button></form>}
    <button className="text-button danger" onClick={reset}>Reset tasting</button><a className="text-button" href="/guide">Setup & rehearsal guide</a>
   </details>
   <details className="panel education"><summary>Wine words, without the fuss</summary><p><strong>Tannin</strong> is the drying grip on your gums, like strong black tea.</p><p><strong>Acidity</strong> makes your mouth water. It is different from bitterness.</p><p><strong>Body</strong> means how light or weighty a wine feels in your mouth.</p><p>Fruit words are aroma comparisons, not added ingredients. Vanilla often comes from oak.</p></details>

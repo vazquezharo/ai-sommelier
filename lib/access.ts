@@ -2,7 +2,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 const buckets = new Map<string,{count:number;until:number}>();
-export function configured(){return Boolean(process.env.OPENAI_API_KEY && process.env.HOST_ACCESS_CODE && process.env.HOST_SESSION_SECRET);}
+export function missingConfiguration(){return ["OPENAI_API_KEY","HOST_ACCESS_CODE","HOST_SESSION_SECRET"].filter(name=>!process.env[name]?.trim());}
+export function configured(){return missingConfiguration().length===0;}
 export function sameOrigin(req:Request) { const origin=req.headers.get("origin"); const url=new URL(req.url); const protocol=req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || url.protocol.slice(0,-1); const host=req.headers.get("host") || url.host; if (!origin || origin!==protocol+"://"+host) throw new Error("Origin rejected"); }
 export function limit(key:string,max:number,windowMs:number){
  const now=Date.now();
