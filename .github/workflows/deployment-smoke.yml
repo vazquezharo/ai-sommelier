@@ -9,17 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Check photo release without secrets, images, or paid API calls
+      - name: Check researched sommelier release without secrets or paid API calls
         run: |
           node --input-type=module <<'JS'
           const base="https://ai-sommelier-virid.vercel.app",checks=[];
           for(const [path,expected,method] of [["/",200,"GET"],["/bottle",200,"GET"],["/api/host",200,"GET"],["/api/bottle",401,"GET"],["/api/bottle/question",401,"POST"],["/api/bottle/audio",401,"POST"],["/source.json",404,"GET"],["/api/voice",410,"POST"]]){
             const r=await fetch(base+path,{method,signal:AbortSignal.timeout(15000),headers:{"Cache-Control":"no-cache","Origin":base,"Content-Type":"application/json"},...(method==="POST"?{body:"{}"}:{})});
             const text=await r.text(),result={path,status:r.status,expected,pass:r.status===expected};
-            if(path==="/bottle"){result.photoScreen=text.includes("Opening bottle lookup");result.pass&&=result.photoScreen;}
+            if(path==="/bottle"){result.photoScreen=text.includes("Opening bottle lookup");result.pass&&=result.photoScreen;
+              const assets=[...new Set([...text.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]).filter(u=>u.startsWith("/_next/static/")))];
+              const chunks=await Promise.all(assets.map(async u=>(await fetch(base+u,{signal:AbortSignal.timeout(15000)})).text()));
+              result.updatedBottleUI=chunks.join("\n").includes("Looking up your bottle");result.pass&&=result.updatedBottleUI;
+            }
             if(path==="/api/host"&&r.ok){const data=JSON.parse(text);result.demo=data.demo;result.hostConfigured=data.hostConfigured;result.unlocked=data.unlocked;result.missing=data.missing;result.pass&&=data.hostConfigured===true&&data.demo===false&&data.unlocked===false;}
             checks.push(result);
           }
-          console.log(JSON.stringify({url:base,productionCommit:"93a46a0830d3a0ba931e056d54d8783e4b60ee16",checks},null,2));
+          console.log(JSON.stringify({url:base,productionCommit:"ca1b14156f9194dbce9e423f39380d8efad90782",checks},null,2));
           if(checks.some(c=>!c.pass))process.exitCode=1;
           JS
