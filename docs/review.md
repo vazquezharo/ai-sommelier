@@ -41,3 +41,10 @@ Live HTTP check reproduced an unrevealed answer disclosure: GET /source.json ret
 | Mobile | 7/10 | 4/4 emulated touch targets; 3/4 keyboard/status checks incomplete; 0/2 physical Safari/Bluetooth unverified. |
 | Maintainability | 3/5 | 2/3 source separation/privacy docs inaccurate; 1/2 old tests pass while missing key/audio gates. |
 API-key exposure: no actual key found in repository/browser source inspected; actual Vercel env inaccessible. Live disclosure report from user remains additional evidence, not a newly reproduced paid-model result.
+
+## Pass 1
+Implemented server-only identities, opaque round handles, encrypted authoritative tasting state, authenticated lineup/reveal/overview routes, removed public source/audio, stateless ASR -> reviewed topic selection -> exact catalog text -> TTS. Direct Realtime token/audio path returns 410. Added HTTP, compiled-chunk, adversarial, microphone and stale-output checks.
+Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36923254688: 37/38 unit checks passed. One identity-scan assertion falsely matched the producer word "Redi" inside "ingredients". This is not an observed semantic identity disclosure. Build/browser checks did not run, so no acceptance or new passing score is assigned yet.
+
+## Pass 2 (in progress)
+Correct the lexical assertion to compare complete normalized names rather than substrings; keep the human-reviewed catalog and exact text gate as the primary boundaries. Add bounded optional real-provider speech generation and re-transcription. No key or opt-in means "unverified", not a pass. Repeat the affected tests and production/browser regressions.

@@ -10,6 +10,6 @@ test("unauthenticated HTML, anonymous payloads, localStorage and errors reveal n
  const bodies:string[]=[];page.on("response",async r=>{if(r.url().includes("/api/")&&r.status()<400)try{bodies.push(await r.text());}catch{}});
  await page.goto("/");await page.getByRole("button",{name:"Start tasting",exact:true}).click();await page.getByText("Customize setup · host only",{exact:true}).count();
  const html=await page.content();const stored=await page.evaluate(()=>localStorage.getItem("ai-sommelier-v2"));
- for(const identity of identities){expect(html).not.toContain(identity);expect(stored).not.toContain(identity);expect(bodies.join(" ")).not.toContain(identity);}
+ for(const identity of identities){expect(html).not.toContain(identity);expect(stored||"").not.toContain(identity);expect(bodies.join(" ")).not.toContain(identity);}
  await page.getByText("Host settings & access",{exact:true}).click();await page.getByRole("button",{name:"Host-only lineup",exact:true}).last().click();await expect(page.getByText(/Unlock host access to view the lineup/)).toBeVisible();
 });

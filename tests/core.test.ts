@@ -26,7 +26,8 @@ test("server reveal state, encrypted cookie and mode restrictions",()=>{
  applyTasting(state,{action:"finish"});applyTasting(state,{action:"reveal-lineup"});assert.equal(Object.keys(publicTasting(state).revealed).length,8);
 });
 test("catalog and hints contain no producer, grape, bottle name or verified region",()=>{
- for(const text of [anonymousHint,...Object.values(answers)])for(const w of wines)for(const identity of [w.producer,w.name,w.grape,w.region].filter(Boolean) as string[])assert.ok(!text.toLowerCase().includes(identity.toLowerCase()),identity);
+ const normalized=(s:string)=>" "+s.toLowerCase().replace(/[^a-z0-9]+/g," ").trim()+" ";
+ for(const text of [anonymousHint,...Object.values(answers)])for(const w of wines)for(const identity of [w.producer,w.name,w.grape,w.region].filter(Boolean) as string[])assert.ok(!normalized(text).includes(normalized(identity)),identity);
 });
 test("router output cannot introduce arbitrary prose, unknown IDs, or encoded identities",()=>{
  for(const value of [null,"This is Grenache",{id:"grenache"},{id:"tannin",text:"This is Grenache"},{id:"neutral",extra:"encoded answer"}])assert.equal(validateChoice(value),"neutral");
