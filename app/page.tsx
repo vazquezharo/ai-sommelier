@@ -23,7 +23,7 @@ export default function Home(){
   setP(prev=>{
    const notes={...prev.notes},transcripts={...prev.transcripts};
    if(prev.sessionId!==s.sessionId){prev.order.forEach((id,i)=>{if(prev.notes[id])notes[s.order[i]]=prev.notes[id];if(prev.transcripts[id])transcripts[s.order[i]]=prev.transcripts[id];});}
-   return {...prev,sessionId:s.sessionId,order:s.order,revealMode:s.mode,started:s.started,finished:s.finished,index:Math.min(prev.index,7),notes,transcripts};
+   return {...prev,sessionId:s.sessionId,order:s.order,revealMode:s.started?s.mode:prev.revealMode,started:s.started,finished:s.finished,index:Math.min(prev.index,7),notes,transcripts};
   });
  }
  async function loadSession(){setHostBusy(true);try{const r=await fetch("/api/tasting",{cache:"no-store"});if(!r.ok)throw Error("Host session is unavailable. Unlock host access again.");applySession(await r.json());}finally{setHostBusy(false);}}
@@ -66,7 +66,7 @@ export default function Home(){
    try{await el.play();}catch{if(epoch===audioEpoch.current)setAudioBlocked(true);}
   }catch(e){if(epoch===audioEpoch.current){setBusy(false);setMessage(e instanceof Error?e.message:"Audio unavailable.");}}
  }
- function newVoice(){const v=new Voice(livePlayer.current!,{state:setVoiceState,message:setMessage,transcript:log,audioBlocked:()=>setAudioBlocked(true)});voice.current=v;return v;}
+ function newVoice(){const v=new Voice(livePlayer.current!,{state:setVoiceState,message:setMessage,transcript:log,audioBlocked:()=>setAudioBlocked(true),authRequired:()=>{setUnlocked(false);setTimeout(requestUnlock,0);}});voice.current=v;return v;}
  async function connectVoice(){stop();setMessage("");prime(livePlayer.current);if(demo){setMessage("Demo mode: live Q&A is unavailable. No answers are simulated.");return;}if(!unlocked){requestUnlock();setMessage("Enter your host code once to enable Q&A.");return;}await newVoice().connect();}
  async function askTyped(){if(!typed.trim())return;if(demo){setMessage("Demo mode: live Q&A is unavailable. No answers are simulated.");return;}if(!unlocked){requestUnlock();return;}prime(livePlayer.current);const v=voice.current||newVoice();const q=typed;setTyped("");await v.askText(q);}
  const transcripts=(p.transcripts[handle]||[]).filter(t=>isRevealed||t.blind),note=p.notes[handle]||"";

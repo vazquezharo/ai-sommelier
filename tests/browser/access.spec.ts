@@ -39,3 +39,10 @@ test("host auth attempts are limited and rejected values are never echoed",async
  let status=0;for(let i=0;i<11;i++)status=(await request.post("/api/host",{headers:{Origin:origin,"x-forwarded-for":"192.0.2.211"},data:{code:"wrong"}})).status();expect(status).toBe(429);
  const r=await request.post("/api/host",{headers:{Origin:origin,"x-forwarded-for":"192.0.2.212","Content-Type":"application/json"},data:'{"secret":"encoded identity"'});expect(JSON.stringify(await r.json())).not.toContain("encoded identity");
 });
+
+test("expired authentication fails closed without discarding the encrypted tasting",async({request})=>{
+ await authenticate(request);const before=await (await request.get("/api/tasting")).json();
+ const crypto=await import("node:crypto");const value="a".repeat(32)+"."+String(Date.now()-10000);const sig=crypto.createHmac("sha256","test-only-cookie-signing-secret-for-ci-32").update(value).digest("hex");
+ const status=await request.get("/api/host",{headers:{Cookie:"sommelier-host="+value+"."+sig}});expect((await status.json()).unlocked).toBe(false);
+ await authenticate(request);const after=await (await request.get("/api/tasting")).json();expect(after.sessionId).toBe(before.sessionId);expect(after.order).toEqual(before.order);
+});

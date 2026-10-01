@@ -1,6 +1,6 @@
 import {answers,AnswerId} from "./guidance";
 export type VoiceState="off"|"connecting"|"ready"|"listening"|"processing"|"speaking"|"error";
-type Callbacks={state:(s:VoiceState)=>void;message:(s:string)=>void;transcript:(role:string,text:string)=>void;audioBlocked:()=>void};
+type Callbacks={state:(s:VoiceState)=>void;message:(s:string)=>void;transcript:(role:string,text:string)=>void;audioBlocked:()=>void;authRequired?:()=>void};
 export class Voice{
  private stream:MediaStream|null=null;private recorder:MediaRecorder|null=null;private abort:AbortController|null=null;
  private epoch=0;private chunks:Blob[]=[];private listening=false;private responseActive=false;private pressTime=0;
@@ -52,7 +52,7 @@ export class Voice{
   this.abort=new AbortController();const signal=this.abort.signal;
   try{
    const r=await fetch("/api/question",{method:"POST",headers:typeof body==="string"?{"Content-Type":"application/json"}:undefined,body,signal});
-   const result=await r.json();if(epoch!==this.epoch)return;if(!r.ok)throw Error(result.error||"Question unavailable.");
+   const result=await r.json();if(epoch!==this.epoch)return;if(r.status===401){this.close();this.cb.authRequired?.();this.cb.message("Host access expired. Enter the host code again.");return;}if(!r.ok)throw Error(result.error||"Question unavailable.");
    // Exact catalog membership is a second boundary. No model prose is allowed through.
    const id=result.answerId as AnswerId;if(!Object.hasOwn(answers,id)||result.text!==answers[id])throw Error("Unapproved answer blocked. Try a general tasting question.");
    this.cb.transcript("Guest",result.question);this.cb.transcript("Sommelier",result.text);
@@ -60,6 +60,7 @@ export class Voice{
    if(!result.audioAvailable){this.responseActive=false;this.emit(this.stream?"ready":"off");return;}
    const speech=await fetch("/api/audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"answer",answerId:id}),signal});
    if(epoch!==this.epoch)return;
+   if(speech.status===401){this.close();this.cb.authRequired?.();this.cb.message("Host access expired. Enter the host code again.");return;}
    if(!speech.ok){const error=await speech.json();throw Error(error.error||"Audio unavailable. The reviewed answer is in the transcript.");}
    const blob=await speech.blob();if(epoch!==this.epoch)return;
    if(this.url)URL.revokeObjectURL(this.url);this.url=URL.createObjectURL(blob);this.audio.src=this.url;

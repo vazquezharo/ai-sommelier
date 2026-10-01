@@ -48,3 +48,13 @@ Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36923254688: 37/38 
 
 ## Pass 2 (in progress)
 Correct the lexical assertion to compare complete normalized names rather than substrings; keep the human-reviewed catalog and exact text gate as the primary boundaries. Add bounded optional real-provider speech generation and re-transcription. No key or opt-in means "unverified", not a pass. Repeat the affected tests and production/browser regressions.
+
+### Pass 2 results and score
+Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36923667188: 38/38 unit checks and production build passed; 20/21 browser checks passed. Host setup reorder reset the unstarted local reveal preference from each to end. This breaks a core per-round flow; acceptance FAIL even with other protection tests passing. Live job 110575580247 explicitly recorded unverified and apiCalls:0.
+Candidate score: 84/100 (secrecy 35; guidance 19; voice 12; recovery 5; mobile 8; maintainability 5). Recovery deductions include the observed mode bug and lack of automatic legacy permission migration. Secrecy deductions include the public source repository and untested actual acoustic output. Other category deductions remain tied to physical/provider verification, not assumed away.
+
+### Pass 1 provisional score
+51/100: secrecy 19, guidance 17, voice 4, recovery 3, mobile 3, maintainability 5. The new architecture had only partial unit verification; production build/new browser behavior were unverified. This provisional score is lower than baseline because replacing working voice internals without completing their checks earns no assumed success.
+
+## Pass 3 (in progress)
+Preserve the host's chosen reveal mode across unstarted reorder responses. Add a host-auth-expiry callback that immediately closes microphone/audio and focuses login. Test mic disconnect/reconnect, Stop during pending TTS fetch, retained encrypted state after expired auth, and actual computed button contrast. Retest all affected and regression checks.

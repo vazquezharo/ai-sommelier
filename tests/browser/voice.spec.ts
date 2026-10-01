@@ -46,3 +46,20 @@ test("revealed-to-blind voice uses no identity, metadata or history",async({page
  expect(payloads).toEqual([{question:"What does tannin feel like?"},{question:"Is this Grenache?"}]);
  await page.getByRole("button",{name:"Stop speaking"}).click();await expect(page.getByRole("heading",{name:"Let the glass speak."})).toBeVisible();
 });
+
+test("expired host session releases microphone and reopens login",async({page})=>{
+ await mockMic(page);await start(page);await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();
+ await page.route("**/api/question",r=>r.fulfill({status:401,json:{error:"Unlock host access first."}}));
+ await typed(page,"What is tannin?");await expect(page.getByText("Host access expired. Enter the host code again.",{exact:true})).toBeVisible();await expect(page.getByLabel("Host access code",{exact:true})).toBeFocused();
+ expect(await page.evaluate(()=>(window as unknown as {micTest:{enabled:boolean}}).micTest.enabled)).toBe(false);
+});
+test("microphone disconnect and reconnect remain silent between holds",async({page})=>{
+ await mockMic(page);await start(page);await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();
+ await page.evaluate(()=>(window as unknown as {micTest:{ended:null|(()=>void)}}).micTest.ended?.());await expect(page.getByText("Microphone disconnected. Reconnect or type a question.",{exact:true})).toBeVisible();
+ await page.getByRole("button",{name:"Reconnect sommelier",exact:true}).click();await expect(page.getByText("Ready · microphone off",{exact:true})).toBeVisible();expect(await page.evaluate(()=>(window as unknown as {micTest:{enabled:boolean}}).micTest.enabled)).toBe(false);
+});
+test("Stop during pending audio fetch prevents late playback",async({page})=>{
+ await start(page);await page.route("**/api/audio",async r=>{await new Promise(resolve=>setTimeout(resolve,600));try{await r.fulfill({contentType:"audio/mpeg",body:"late-invalid-audio"});}catch{}});
+ await typed(page,"What is body?");await expect(page.getByText("Transcript (2)",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Stop speaking"}).click();await page.waitForTimeout(800);
+ expect(await page.evaluate(()=>Array.from(document.querySelectorAll("audio")).every(a=>a.paused&&!a.src))).toBe(true);await expect(page.getByText("Microphone off",{exact:true})).toBeVisible();
+});
