@@ -70,3 +70,8 @@ Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36925766383: 40/40 
 
 ## Pass 5
 Address the remaining browser-engine verification gap by running the same production app and adversarial/voice/recovery/mobile suite in WebKit as well as Chromium. WebKit's Linux build and mocked capture/output do not establish physical iOS microphone permissions, actual model speech, Bluetooth behavior or production latency. Do not raise the score merely because a second engine passes.
+
+### Final-pass engine diagnosis (before retest)
+Initial WebKit run https://github.com/vazquezharo/ai-sommelier/actions/runs/36926080943 passed 22/27 checks; five microphone checks failed. Diagnostic run https://github.com/vazquezharo/ai-sommelier/actions/runs/36926637859 passed 25/27 WebKit checks and reproduced two failures. Logged state shows secure:true, hidden:false, injected Recorder present, but reconnect received native NotAllowedError; the method-level mediaDevices mock was not stable in WebKit. The denial test also never reached getUserMedia because Linux WebKit's native MediaRecorder is undefined. These tests cannot yet count as passes.
+
+Within pass 5, replace the complete test-only navigator.mediaDevices interface with a stable explicit mock, inject recording support for the simulated denial case, and add a separate test for unavailable native MediaRecorder with typed fallback. Production microphone code is not patched to disguise unsupported browsers. Retest both engines. This remains mocked microphone/output verification, not actual iOS capture.

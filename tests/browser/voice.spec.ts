@@ -16,7 +16,7 @@ test("record -> reviewed text -> speech; mic off, Stop, fresh round and reconnec
  await page.getByRole("button",{name:"End voice session",exact:true}).click();await expect(page.getByText("Microphone off",{exact:true})).toBeVisible();
 });
 test("microphone denial still permits typed reviewed answers",async({page})=>{
- await page.addInitScript(()=>Object.defineProperty(navigator.mediaDevices,"getUserMedia",{value:()=>Promise.reject(new DOMException("Denied","NotAllowedError"))}));
+ await mockMic(page,true);
  await start(page);await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();await expect(page.getByText(/Microphone access was denied/)).toBeVisible();
  await typed(page,"What does vanilla mean?");await expect(page.getByText("Sommelier speaking · microphone off",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Stop speaking"}).click();
  await page.getByText("Transcript (2)",{exact:true}).click();await expect(page.getByText(/Vanilla-like aromas often come from oak/)).toBeVisible();
@@ -67,4 +67,11 @@ test("Stop during pending audio fetch prevents late playback",async({page})=>{
 test.beforeEach(async({page})=>{page.on("pageerror",e=>console.log("Browser error:",e.message));});
 test.afterEach(async({page},info)=>{
  if(info.status!==info.expectedStatus)console.log("Voice failure evidence:",JSON.stringify(await page.evaluate(()=>({status:[...document.querySelectorAll('[role="status"]')].map(el=>el.textContent),secure:isSecureContext,hidden:document.hidden,recorder:typeof MediaRecorder,recorderName:typeof MediaRecorder==="undefined"?null:MediaRecorder.name,mock:(window as unknown as {micTest?:unknown}).micTest,hostDetails:(document.querySelector(".host-settings") as HTMLDetailsElement)?.open,media:[...document.querySelectorAll("audio")].map(a=>({paused:a.paused,error:a.error?.code}))}))));
+});
+
+test("unsupported native recording has a clear typed fallback",async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(window,"MediaRecorder",{configurable:true,value:undefined}));
+ await start(page);await page.getByRole("button",{name:"Ask sommelier",exact:true}).click();
+ await expect(page.getByText("Recording needs a supported browser over HTTPS. You can type a question.",{exact:true})).toBeVisible();
+ await typed(page,"What is acidity?");await expect(page.getByText("Sommelier speaking · microphone off",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Stop speaking"}).click();
 });
