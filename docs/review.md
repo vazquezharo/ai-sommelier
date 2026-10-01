@@ -64,3 +64,9 @@ Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36924394823: 38/38 
 
 ## Pass 4
 Replace the timeout focus with a post-render effect. Add a pre-playback acoustic transcript gate: the completed generated/private clip must match the approved text before any bytes return to the browser or enter the verified cache. Extra or missing words fail closed to written guidance. Add pure-policy tests and an actual server-route test with a deliberately tampered mock clip, plus retry after failed verification. This is layered protection, not a claim that ASR can prove acoustic truth. First-use latency/cost increases; exact transcription mismatch may block legitimate clips. Real output remains unverified without review credentials.
+
+### Pass 4 results
+Run https://github.com/vazquezharo/ai-sommelier/actions/runs/36925766383: 40/40 unit checks, production build and 27/27 Chromium mobile browser checks passed. Tampered mock audio failed verification with JSON 502 and no audio bytes; retry returned 200 after restoring the approved transcript. Login now focuses after expired access. Optional live job 110582572513 explicitly recorded unverified, apiCalls:0. Candidate 88/100: secrecy 35, guidance 19, voice 12, recovery 9, mobile 8, maintainability 5. Acoustic policy is exercised with mocks; real TTS/ASR behavior is not awarded an assumed pass.
+
+## Pass 5
+Address the remaining browser-engine verification gap by running the same production app and adversarial/voice/recovery/mobile suite in WebKit as well as Chromium. WebKit's Linux build and mocked capture/output do not establish physical iOS microphone permissions, actual model speech, Bluetooth behavior or production latency. Do not raise the score merely because a second engine passes.

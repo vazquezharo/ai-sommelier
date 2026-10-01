@@ -48,8 +48,10 @@ Load your key in the shell privately first. This generates all reviewed hints/an
 npm test
 npm run build
 npm run test:browser
+npx playwright install --with-deps webkit
+SOMMELIER_BROWSER=webkit npm run test:browser
 ```
-Browser checks use an ephemeral HTTPS proxy and explicit mock ASR/router/TTS in CI. They exercise real app/server routes with signed/encrypted cookies. Mock audio is a playable silent WAV: synthetic transcript markers exercise the audio gate, not actual spoken words or physical Safari.
+Chromium and WebKit checks use an iPhone-sized viewport, an ephemeral HTTPS proxy and explicit mock ASR/router/TTS in CI. WebKit on Linux is not physical Safari on iOS. They exercise real app/server routes with signed/encrypted cookies. Mock audio is a playable silent WAV: synthetic transcript markers exercise the audio gate, not actual spoken words or physical Safari.
 
 Only CI=true plus SOMMELIER_TEST_MODE=1 selects the local mock provider. Never set these in Vercel. The production default is OpenAI. API keys are never logged by the fixtures.
 
